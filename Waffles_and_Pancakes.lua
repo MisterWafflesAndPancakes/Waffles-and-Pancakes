@@ -155,4 +155,3 @@ return function()
 	button.MouseButton1Click:Connect(ToggleAutoBuy)
 	UpdateButtonAppearance()
 	end
-end
