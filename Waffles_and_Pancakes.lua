@@ -85,16 +85,20 @@ return function()
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.Name = "AutoBuyGui"
 	screenGui.ResetOnSpawn = false
+	screenGui.Enabled = true               -- ✅ Force visibility
+	screenGui.DisplayOrder = 100           -- ✅ Ensure it's layered above other GUIs
 	screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 	-- Main container
 	local container = Instance.new("Frame")
-	container.Size = UDim2.new(0, 200, 0, 90) -- taller to fit title
+	container.Size = UDim2.new(0, 200, 0, 90)
 	container.Position = UDim2.new(0, 20, 0, 20)
 	container.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 	container.BorderSizePixel = 0
 	container.Active = true
 	container.Draggable = true
+	container.Visible = true              -- ✅ Force it to be visible
+	container.ZIndex = 100                -- ✅ Ensure it's layered above other elements
 	container.Parent = screenGui
 
 	local containerCorner = Instance.new("UICorner")
