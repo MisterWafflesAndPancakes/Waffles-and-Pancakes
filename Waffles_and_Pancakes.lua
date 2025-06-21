@@ -2,6 +2,7 @@ return function()
 	-- [WAFFLES AND PANCAKES VERSION 1.1] [UPDATE: AUTOBUY GEARS!]
 	-- [SEED SELECTION AND GEAR SELECTION ENTIRELY CUSTOMISABLE]
 	-- [MADE BY MISTER WAFFLES]
+	
 	local ReplicatedStorage = game:GetService("ReplicatedStorage")
 	local Players = game:GetService("Players")
 	local LocalPlayer = Players.LocalPlayer
