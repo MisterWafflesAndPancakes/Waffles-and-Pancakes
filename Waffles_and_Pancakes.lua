@@ -81,7 +81,6 @@ return function()
 	    AutoBuyLoop = nil
 	end
 
-	You said:
 	-- Create a simple ScreenGui with a toggle button
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.Name = "AutoBuyGui"
@@ -155,3 +154,4 @@ return function()
 	button.MouseButton1Click:Connect(ToggleAutoBuy)
 	UpdateButtonAppearance()
 	end
+end
