@@ -2,13 +2,9 @@ return function()
 	-- [WAFFLES AND PANCAKES VERSION 1.1] [UPDATE: AUTOBUY GEARS!]
 	-- [SEED SELECTION AND GEAR SELECTION ENTIRELY CUSTOMISABLE]
 	-- [MADE BY MISTER WAFFLES]
-
-	repeat wait() until game:IsLoaded()
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
 	local Players = game:GetService("Players")
 	local LocalPlayer = Players.LocalPlayer
-	repeat wait() until LocalPlayer:FindFirstChild("PlayerGui")
-
-	local ReplicatedStorage = game:GetService("ReplicatedStorage")
 	local GameEvents = ReplicatedStorage:WaitForChild("GameEvents")
 
 	-- [PUT SEEDNAME HERE TO SELECT SEED]
