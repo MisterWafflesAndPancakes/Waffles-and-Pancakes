@@ -3,9 +3,12 @@ return function()
 	-- [SEED SELECTION AND GEAR SELECTION ENTIRELY CUSTOMISABLE]
 	-- [MADE BY MISTER WAFFLES]
 
-	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+	repeat wait() until game:IsLoaded()
 	local Players = game:GetService("Players")
 	local LocalPlayer = Players.LocalPlayer
+	repeat wait() until LocalPlayer:FindFirstChild("PlayerGui")
+
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
 	local GameEvents = ReplicatedStorage:WaitForChild("GameEvents")
 
 	-- [PUT SEEDNAME HERE TO SELECT SEED]
