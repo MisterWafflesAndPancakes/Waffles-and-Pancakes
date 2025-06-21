@@ -81,45 +81,31 @@ return function()
 	    AutoBuyLoop = nil
 	end
 
+	You said:
 	-- Create a simple ScreenGui with a toggle button
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.Name = "AutoBuyGui"
 	screenGui.ResetOnSpawn = false
-	screenGui.Enabled = true               -- ✅ Force visibility
-	screenGui.DisplayOrder = 100           -- ✅ Ensure it's layered above other GUIs
 	screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
-	-- Main container
+	-- More GUI Elements
 	local container = Instance.new("Frame")
-	container.Size = UDim2.new(0, 200, 0, 90)
+	container.Size = UDim2.new(0, 170, 0, 60)
 	container.Position = UDim2.new(0, 20, 0, 20)
 	container.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 	container.BorderSizePixel = 0
 	container.Active = true
-	container.Draggable = true
-	container.Visible = true              -- ✅ Force it to be visible
-	container.ZIndex = 100                -- ✅ Ensure it's layered above other elements
+	container.Draggable = true -- draggable GUI enabled
 	container.Parent = screenGui
 
 	local containerCorner = Instance.new("UICorner")
 	containerCorner.CornerRadius = UDim.new(0, 12)
 	containerCorner.Parent = container
 
-	-- Title label
-	local title = Instance.new("TextLabel")
-	title.Size = UDim2.new(1, 0, 0, 30)
-	title.Position = UDim2.new(0, 0, 0, 0)
-	title.BackgroundTransparency = 1
-	title.Text = "Waffles and Pancakes"
-	title.TextColor3 = Color3.fromRGB(255, 255, 255)
-	title.Font = Enum.Font.GothamSemibold
-	title.TextSize = 18
-	title.Parent = container
-	
 	-- Button
 	local button = Instance.new("TextButton")
-	button.Size = UDim2.new(1, -20, 0, 35)
-	button.Position = UDim2.new(0, 10, 0, 40)
+	button.Size = UDim2.new(1, -20, 1, -20)
+	button.Position = UDim2.new(0, 10, 0, 10)
 	button.Text = "Enable Auto-Buy"
 	button.BackgroundColor3 = Color3.fromRGB(60, 180, 75)
 	button.TextColor3 = Color3.new(1, 1, 1)
@@ -137,15 +123,15 @@ return function()
 	buttonStroke.Thickness = 1.2
 	buttonStroke.Parent = button
 
-	-- Hover effect
+	-- Cool hover effect >:3
 	button.MouseEnter:Connect(function()
 		button.BackgroundColor3 = Color3.fromRGB(70, 200, 85)
 	end)
 	button.MouseLeave:Connect(function()
 		button.BackgroundColor3 = AutoBuyEnabled and Color3.fromRGB(200, 60, 60) or Color3.fromRGB(60, 180, 75)
 	end)
-
-	-- Button appearance update
+	
+	-- Appearance update
 	local function UpdateButtonAppearance()
 		if AutoBuyEnabled then
 			button.Text = "Disable Auto-Buy"
@@ -156,7 +142,7 @@ return function()
 		end
 	end
 
-	-- Toggle behavior
+	-- Toggle function
 	local function ToggleAutoBuy()
 		if AutoBuyEnabled then
 			StopAutoBuy()
@@ -165,7 +151,9 @@ return function()
 		end
 		UpdateButtonAppearance()
 	end
-
+	
 	button.MouseButton1Click:Connect(ToggleAutoBuy)
+	
+	-- Set initial appearance
 	UpdateButtonAppearance()
 end
