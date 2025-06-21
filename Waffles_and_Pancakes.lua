@@ -64,7 +64,7 @@ return function()
 	            for _, seed in ipairs(SeedsToBuy) do
 	                BuySeed(seed)
 	            end
-	           for_, gear in ipairs(GearsToBuy) do
+	            for _, gear in ipairs(GearsToBuy) do
 	                BuyGear(gear)
 	           end
 	            wait(AutoBuyInterval)
