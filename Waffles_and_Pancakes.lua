@@ -101,7 +101,7 @@ return function()
 	button.Text = "Enable Auto-Buy"
 	button.BackgroundColor3 = Color3.fromRGB(60, 180, 75)
 	button.TextColor3 = Color3.new(1, 1, 1)
-	button.Font = Enum.Font.Ubtunu
+	button.Font = Enum.Font.Ubuntu
 	button.TextSize = 16
 	button.AutoButtonColor = false
 	button.BackgroundTransparency = 1 -- fade-in
@@ -126,11 +126,11 @@ return function()
 	local function UpdateButtonAppearance()
 		if AutoBuyEnabled then
 			button.Text = "Disable Auto-Buy"
-			button.Font = Enum.Font.Ubtunu
+			button.Font = Enum.Font.Ubuntu
 			button.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
 		else
 			button.Text = "Enable Auto-Buy"
-			button.Font = Enum.Font.Ubtunu
+			button.Font = Enum.Font.Ubuntu
 			button.BackgroundColor3 = Color3.fromRGB(60, 180, 75)
 		end
 	end
