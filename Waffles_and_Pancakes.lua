@@ -81,7 +81,7 @@ return function()
 	
 	-- More GUI Elements
 	local container = Instance.new("Frame")
-	container.Size = UDim2.new(0, 200, 0, 80)
+	container.Size = UDim2.new(0, 170, 0, 60)
 	container.Position = UDim2.new(0, 20, 0, 20)
 	container.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 	container.BorderSizePixel = 0
@@ -91,11 +91,11 @@ return function()
 	local containerCorner = Instance.new("UICorner")
 	containerCorner.CornerRadius = UDim.new(0, 12)
 	containerCorner.Parent = container
-
+	
 	-- Title label
 	local title = Instance.new("TextLabel")
-	button.Size = UDim2.new(0, 140, 0, 25)
-	button.Position = UDim2.new(0.5, -70, 0, 45)
+	title.Size = UDim2.new(1, 0, 0, 20)
+	title.Position = UDim2.new(0, 0, 0, 0)
 	title.BackgroundTransparency = 1
 	title.Text = "Waffles and Pancakes"
 	title.TextColor3 = Color3.fromRGB(255, 0, 0) -- Start color
@@ -156,8 +156,8 @@ return function()
 	
 	-- Button
 	local button = Instance.new("TextButton")
-	button.Size = UDim2.new(0, 140, 0, 25) 
-	button.Position = UDim2.new(0.5, -70, 0, 25) 
+	button.Size = UDim2.new(1, -20, 1, -20)
+	button.Position = UDim2.new(0, 10, 0, 10)
 	button.Text = "Enable Auto-Buy"
 	button.BackgroundColor3 = Color3.fromRGB(60, 180, 75)
 	button.TextColor3 = Color3.new(1, 1, 1)
@@ -206,4 +206,5 @@ return function()
 	
 	button.MouseButton1Click:Connect(ToggleAutoBuy)
 	UpdateButtonAppearance()
+	
 end
