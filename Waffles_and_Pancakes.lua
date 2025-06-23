@@ -12,10 +12,6 @@ return function()
 	   "Prickly Pear",
 	   "Bell Pepper",
 	   "Kiwi",
-	   "Pineapple",
-	   "Banana",
-	   "Avocado",
-	   "Green Apple",
 	}
 	
 	local GearsToBuy = {
@@ -24,6 +20,7 @@ return function()
 	    "Advanced Sprinkler",
 	    "Godly Sprinkler",
 	    "Master Sprinkler",
+	    "Tanning Mirror",
 	}
 	
 	local AutoBuyEnabled = false
