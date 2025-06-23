@@ -8,30 +8,45 @@ return function()
 
 	--Find seed name in shop and copy exactly as it is written in the shop
 	local SeedsToBuy = {
-	   "Sugar Apple", "Feijoa", "Loquat", "Prickly Pear", "Bell Pepper",
-	   "Kiwi"
+	 "Sugar Apple",
+	 "Feijoa",
+	 "Loquat", 
+	 "Prickly Pear", 
+	 "Bell Pepper",
+	 "Kiwi"
 	}
 
 	--Find gear name in shop and copy exactly as it is written in the shop
 	local GearsToBuy = {
-		"Watering Can", "Basic Sprinkler", "Advanced Sprinkler",
-		"Godly Sprinkler", "Master Sprinkler", "Tanning Mirror"
+	 "Watering Can", 
+	 "Basic Sprinkler", 
+	 "Advanced Sprinkler",
+	 "Godly Sprinkler", 
+	 "Master Sprinkler", 
+	 "Tanning Mirror"
 	}
 
 	local AutoBuyEnabled = false
 	local AutoBuyInterval = 1.5
 
 	local function BuySeed(seedName)
-	    if GameEvents:FindFirstChild("BuySeedStock") then
-	        GameEvents.BuySeedStock:FireServer(seedName)
-	    end
+		if GameEvents:FindFirstChild("BuySeedStock") then
+			GameEvents.BuySeedStock:FireServer(seedName)
+			print("🌱 Bought seed:", seedName)
+		else
+			warn("❌ BuySeedStock event not found")
+		end
 	end
-
+	
 	local function BuyGear(gearName)
-	    if GameEvents:FindFirstChild("BuyGearStock") then
-	        GameEvents.BuyGearStock:FireServer(gearName)
-	    end
+		if GameEvents:FindFirstChild("BuyGearStock") then
+			GameEvents.BuyGearStock:FireServer(gearName)
+			print("🛠️ Bought gear:", gearName)
+		else
+			warn("❌ BuyGearStock event not found")
+		end
 	end
+		end
 
 	local AutoBuyLoop
 	local function StartAutoBuy()
