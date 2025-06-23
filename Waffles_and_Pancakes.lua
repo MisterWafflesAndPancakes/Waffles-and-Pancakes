@@ -156,8 +156,8 @@ return function()
 	
 	-- Button
 	local button = Instance.new("TextButton")
-	button.Size = UDim2.new(1, -20, 1, -20)
-	button.Position = UDim2.new(0, 10, 0, 10)
+	button.Size = UDim2.new(0, 140, 0, 25) 
+	button.Position = UDim2.new(0.5, -70, 0, 25) 
 	button.Text = "Enable Auto-Buy"
 	button.BackgroundColor3 = Color3.fromRGB(60, 180, 75)
 	button.TextColor3 = Color3.new(1, 1, 1)
