@@ -1,71 +1,46 @@
 return function()
-	-- [WAFFLES AND PANCAKES[
-	-- [SEED SELECTION AND GEAR SELECTION ENTIRELY CUSTOMISABLE]
-	-- [MADE BY MISTER WAFFLES]
-	
 	local ReplicatedStorage = game:GetService("ReplicatedStorage")
 	local Players = game:GetService("Players")
+	local TweenService = game:GetService("TweenService")
+	local UserInputService = game:GetService("UserInputService")
 	local LocalPlayer = Players.LocalPlayer
 	local GameEvents = ReplicatedStorage:WaitForChild("GameEvents")
 
-	-- [PUT SEEDNAME HERE TO SELECT SEED] [COPY THE SEED SHOP NAME EXACTLY AS IT IS DISPLAYED]
+	--Find seed name in shop and copy exactly as it is written in the shop
 	local SeedsToBuy = {
-	   "Sugar Apple",
- 	   "Feijoa",
- 	   "Loquat",
- 	   "Prickly Pear",
- 	   "Bell Pepper",
- 	   "Kiwi",
- 	   "Pineapple",
- 	   "Banana",
- 	   "Avocado",
- 	   "Green Apple",
+	   "Sugar Apple", "Feijoa", "Loquat", "Prickly Pear", "Bell Pepper",
+	   "Kiwi"
 	}
 
+	--Find gear name in shop and copy exactly as it is written in the shop
 	local GearsToBuy = {
-	    "Watering Can",
-	    "Basic Sprinkler",
-	    "Advanced Sprinkler",
-	    "Godly Sprinkler",
-	    "Master Sprinkler",
+		"Watering Can", "Basic Sprinkler", "Advanced Sprinkler",
+		"Godly Sprinkler", "Master Sprinkler", "Tanning Mirror"
 	}
 
 	local AutoBuyEnabled = false
-	local AutoBuyInterval = 1.5 -- [SECONDS]
+	local AutoBuyInterval = 1.5
 
-	-- [BUY SEED FUNC]
 	local function BuySeed(seedName)
 	    if GameEvents:FindFirstChild("BuySeedStock") then
 	        GameEvents.BuySeedStock:FireServer(seedName)
-	        print("Bought seed:", seedName)
-	    else
-	        warn("BuySeedStock event not found")
 	    end
 	end
 
-	-- [BUY GEAR FUNC]
 	local function BuyGear(gearName)
 	    if GameEvents:FindFirstChild("BuyGearStock") then
 	        GameEvents.BuyGearStock:FireServer(gearName)
-	        print("Bought gear:", gearName)
-	    else
-	        warn("BuyGearStock event not found")
 	    end
 	end
 
 	local AutoBuyLoop
-
 	local function StartAutoBuy()
 	    if AutoBuyLoop then return end
 	    AutoBuyEnabled = true
 	    AutoBuyLoop = coroutine.create(function()
 	        while AutoBuyEnabled do
-	            for _, seed in ipairs(SeedsToBuy) do
-	                BuySeed(seed)
-	            end
-	            for _, gear in ipairs(GearsToBuy) do
-	                BuyGear(gear)
-	           end
+	            for _, seed in ipairs(SeedsToBuy) do BuySeed(seed) end
+	            for _, gear in ipairs(GearsToBuy) do BuyGear(gear) end
 	            wait(AutoBuyInterval)
 	        end
 	    end)
@@ -77,29 +52,98 @@ return function()
 	    AutoBuyLoop = nil
 	end
 
-	-- Create a simple ScreenGui with a toggle button
+	-- GUI Setup
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.Name = "AutoBuyGui"
 	screenGui.ResetOnSpawn = false
 	screenGui.IgnoreGuiInset = true
 	screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
-	-- More GUI Elements
 	local container = Instance.new("Frame")
 	container.Size = UDim2.new(0, 170, 0, 60)
 	container.Position = UDim2.new(0, 20, 0, 20)
 	container.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 	container.BorderSizePixel = 0
 	container.Active = true
+	container.BackgroundTransparency = 1 -- start fully transparent
 	container.Parent = screenGui
 
 	local containerCorner = Instance.new("UICorner")
 	containerCorner.CornerRadius = UDim.new(0, 12)
 	containerCorner.Parent = container
-	
-	-- Universal Dragging (MOBILE + PC SUPPORTED)
-	local UserInputService = game:GetService("UserInputService")
 
+	-- Title
+	local title = Instance.new("TextLabel")
+	title.Size = UDim2.new(1, 0, 0, 20)
+	title.Position = UDim2.new(0, 0, 0, 0)
+	title.BackgroundTransparency = 1
+	title.Text = "Waffles and Pancakes"
+	title.TextColor3 = Color3.fromRGB(255, 0, 0)
+	title.Font = Enum.Font.Ubuntu
+	title.TextSize = 16
+	title.TextTransparency = 1 -- start transparent for fade-in
+	title.Parent = container
+
+	-- RGB effect
+	task.spawn(function()
+		while true do
+			for h = 0, 1, 0.01 do
+				title.TextColor3 = Color3.fromHSV(h, 1, 1)
+				task.wait(0.03)
+			end
+		end
+	end)
+
+	-- Button
+	local button = Instance.new("TextButton")
+	button.Size = UDim2.new(1, -20, 1, -30)
+	button.Position = UDim2.new(0, 10, 0, 25)
+	button.Text = "Enable Auto-Buy"
+	button.BackgroundColor3 = Color3.fromRGB(60, 180, 75)
+	button.TextColor3 = Color3.new(1, 1, 1)
+	button.Font = Enum.Font.Ubtunu
+	button.TextSize = 16
+	button.AutoButtonColor = false
+	button.BackgroundTransparency = 1 -- fade-in
+	button.Parent = container
+
+	local buttonCorner = Instance.new("UICorner")
+	buttonCorner.CornerRadius = UDim.new(0, 10)
+	buttonCorner.Parent = button
+
+	local buttonStroke = Instance.new("UIStroke")
+	buttonStroke.Color = Color3.fromRGB(255, 255, 255)
+	buttonStroke.Thickness = 1.2
+	buttonStroke.Parent = button
+
+	button.MouseEnter:Connect(function()
+		button.BackgroundColor3 = Color3.fromRGB(70, 200, 85)
+	end)
+	button.MouseLeave:Connect(function()
+		button.BackgroundColor3 = AutoBuyEnabled and Color3.fromRGB(200, 60, 60) or Color3.fromRGB(60, 180, 75)
+	end)
+
+	local function UpdateButtonAppearance()
+		if AutoBuyEnabled then
+			button.Text = "Disable Auto-Buy"
+			button.Font = Enum.Font.Ubtunu
+			button.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+		else
+			button.Text = "Enable Auto-Buy"
+			button.Font = Enum.Font.Ubtunu
+			button.BackgroundColor3 = Color3.fromRGB(60, 180, 75)
+		end
+	end
+
+	local function ToggleAutoBuy()
+		if AutoBuyEnabled then StopAutoBuy() else StartAutoBuy() end
+		UpdateButtonAppearance()
+	end
+
+	button.MouseButton1Click:Connect(ToggleAutoBuy)
+	UpdateButtonAppearance()
+
+	-- Universal Dragging
 	local dragging = false
 	local dragInput, dragStart, startPos
 
@@ -119,13 +163,11 @@ return function()
 			startPos = container.Position
 
 			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					dragging = false
-				end
+				if input.UserInputState == Enum.UserInputState.End then dragging = false end
 			end)
 		end
 	end)
-	
+
 	container.InputChanged:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
 			dragInput = input
@@ -133,84 +175,12 @@ return function()
 	end)
 
 	UserInputService.InputChanged:Connect(function(input)
-		if input == dragInput then
-			update(input)
-		end
+		if input == dragInput then update(input) end
 	end)
 
-	-- Button
-	local button = Instance.new("TextButton")
-	button.Size = UDim2.new(1, -20, 1, -20)
-	button.Position = UDim2.new(0, 10, 0, 10)
-	button.Text = "Enable Auto-Buy"
-	button.BackgroundColor3 = Color3.fromRGB(60, 180, 75)
-	button.TextColor3 = Color3.new(1, 1, 1)
-	button.Font = Enum.Font.Ubtunu
-	button.TextSize = 16
-	button.AutoButtonColor = false
-	button.Parent = container
-
-	-- Title label
-	local title = Instance.new("TextLabel")
-	title.Size = UDim2.new(1, 0, 0, 20)
-	title.Position = UDim2.new(0, 0, 0, 0)
-	title.BackgroundTransparency = 1
-	title.Text = "Waffles and Pancakes"
-	title.TextColor3 = Color3.fromRGB(255, 0, 0) -- Start color
-	title.Font = Enum.Font.Ubtunu
-	title.TextSize = 16
-	title.Parent = container
-
-	-- RGB cycle effect
-	task.spawn(function()
-		while true do
-			for hue = 0, 1, 0.01 do
-				title.TextColor3 = Color3.fromHSV(hue, 1, 1)
-				task.wait(0.03)
-			end
-		end
-	end)
-	
-	local buttonCorner = Instance.new("UICorner")
-	buttonCorner.CornerRadius = UDim.new(0, 10)
-	buttonCorner.Parent = button
-	
-	local buttonStroke = Instance.new("UIStroke")
-	buttonStroke.Color = Color3.fromRGB(255, 255, 255)
-	buttonStroke.Thickness = 1.2
-	buttonStroke.Parent = button
-	
-	-- Hover effect
-	button.MouseEnter:Connect(function()
-		button.BackgroundColor3 = Color3.fromRGB(70, 200, 85)
-	end)
-	button.MouseLeave:Connect(function()
-		button.BackgroundColor3 = AutoBuyEnabled and Color3.fromRGB(200, 60, 60) or Color3.fromRGB(60, 180, 75)
-	end)
-	
-	-- Button appearance update
-	local function UpdateButtonAppearance()
-		if AutoBuyEnabled then
-			button.Text = "Disable Auto-Buy"
-			button.Font = Enum.Font.Ubtunu
-			button.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
-		else
-			button.Text = "Enable Auto-Buy"
-			button.Font = Enum.Font.Ubtunu
-			button.BackgroundColor3 = Color3.fromRGB(60, 180, 75)
-		end
-	end
-	
-	-- Toggle function
-	local function ToggleAutoBuy()
-		if AutoBuyEnabled then
-			StopAutoBuy()
-		else
-			StartAutoBuy()
-		end
-		UpdateButtonAppearance()
-	end
-	
-	button.MouseButton1Click:Connect(ToggleAutoBuy)
-	UpdateButtonAppearance()
+	-- Fade-in
+	local fadeInfo = TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+	TweenService:Create(container, fadeInfo, {BackgroundTransparency = 0}):Play()
+	TweenService:Create(button, fadeInfo, {BackgroundTransparency = 0}):Play()
+	TweenService:Create(title, fadeInfo, {TextTransparency = 0}):Play()
 end
