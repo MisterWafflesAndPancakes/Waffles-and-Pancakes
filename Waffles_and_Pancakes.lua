@@ -2,6 +2,8 @@ return function()
 	local ReplicatedStorage = game:GetService("ReplicatedStorage")
 	local Players = game:GetService("Players")
 	local LocalPlayer = Players.LocalPlayer
+	local TweenService = game:GetService("TweenService")
+	local UserInputService = game:GetService("UserInputService")
 	local GameEvents = ReplicatedStorage:WaitForChild("GameEvents")
 	
 	-- [PUT SEEDNAME HERE TO SELECT SEED] [COPY THE SEED SHOP NAME EXACTLY AS IT IS DISPLAYED]
@@ -89,6 +91,27 @@ return function()
 	local containerCorner = Instance.new("UICorner")
 	containerCorner.CornerRadius = UDim.new(0, 12)
 	containerCorner.Parent = container
+
+	-- Title label
+	local title = Instance.new("TextLabel")
+	title.Size = UDim2.new(1, 0, 0, 20)
+	title.Position = UDim2.new(0, 0, 0, 0)
+	title.BackgroundTransparency = 1
+	title.Text = "Waffles and Pancakes"
+	title.TextColor3 = Color3.fromRGB(255, 0, 0) -- Start color
+	title.Font = Enum.Font.GothamSemibold
+	title.TextSize = 16
+	title.Parent = container
+	
+	-- RGB cycle effect
+	task.spawn(function()
+		while true do
+			for hue = 0, 1, 0.01 do
+				title.TextColor3 = Color3.fromHSV(hue, 1, 1)
+				task.wait(0.03)
+			end
+		end
+	end)
 	
 	-- Universal Dragging
 	local UserInputService = game:GetService("UserInputService")
