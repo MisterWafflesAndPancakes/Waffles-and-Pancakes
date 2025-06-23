@@ -73,20 +73,20 @@ return function()
 	screenGui.ResetOnSpawn = false
 	screenGui.IgnoreGuiInset = true
 	screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-
+	
 	local container = Instance.new("Frame")
 	container.Size = UDim2.new(0, 170, 0, 60)
 	container.Position = UDim2.new(0, 20, 0, 20)
 	container.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 	container.BorderSizePixel = 0
 	container.Active = true
-	container.BackgroundTransparency = 1 -- start fully transparent
+	container.BackgroundTransparency = 0 -- now fully visible
 	container.Parent = screenGui
-
+	
 	local containerCorner = Instance.new("UICorner")
 	containerCorner.CornerRadius = UDim.new(0, 12)
 	containerCorner.Parent = container
-
+	
 	-- Title
 	local title = Instance.new("TextLabel")
 	title.Size = UDim2.new(1, 0, 0, 20)
@@ -96,9 +96,9 @@ return function()
 	title.TextColor3 = Color3.fromRGB(255, 0, 0)
 	title.Font = Enum.Font.Ubuntu
 	title.TextSize = 16
-	title.TextTransparency = 1 -- start transparent for fade-in
+	title.TextTransparency = 0 -- fully visible
 	title.Parent = container
-
+	
 	-- RGB effect
 	task.spawn(function()
 		while true do
@@ -108,7 +108,7 @@ return function()
 			end
 		end
 	end)
-
+	
 	-- Button
 	local button = Instance.new("TextButton")
 	button.Size = UDim2.new(1, -20, 1, -30)
@@ -119,25 +119,25 @@ return function()
 	button.Font = Enum.Font.Ubuntu
 	button.TextSize = 16
 	button.AutoButtonColor = false
-	button.BackgroundTransparency = 1 -- fade-in
+	button.BackgroundTransparency = 0 -- fully visible
 	button.Parent = container
-
+	
 	local buttonCorner = Instance.new("UICorner")
 	buttonCorner.CornerRadius = UDim.new(0, 10)
 	buttonCorner.Parent = button
-
+	
 	local buttonStroke = Instance.new("UIStroke")
 	buttonStroke.Color = Color3.fromRGB(255, 255, 255)
 	buttonStroke.Thickness = 1.2
 	buttonStroke.Parent = button
-
+	
 	button.MouseEnter:Connect(function()
 		button.BackgroundColor3 = Color3.fromRGB(70, 200, 85)
 	end)
 	button.MouseLeave:Connect(function()
 		button.BackgroundColor3 = AutoBuyEnabled and Color3.fromRGB(200, 60, 60) or Color3.fromRGB(60, 180, 75)
 	end)
-
+	
 	local function UpdateButtonAppearance()
 		if AutoBuyEnabled then
 			button.Text = "Disable Auto-Buy"
@@ -149,19 +149,21 @@ return function()
 			button.BackgroundColor3 = Color3.fromRGB(60, 180, 75)
 		end
 	end
-
-	local function ToggleAutoBuy()
-		if AutoBuyEnabled then StopAutoBuy() else StartAutoBuy() end
-		UpdateButtonAppearance()
-	end
-
-	button.MouseButton1Click:Connect(ToggleAutoBuy)
-	UpdateButtonAppearance()
-
+	
+	-- More pro RGB fr
+	task.spawn(function()
+		while true do
+			for h = 0, 1, 0.01 do
+				button.TextColor3 = Color3.fromHSV(h, 1, 1)
+				task.wait(0.03)
+			end
+		end
+	end)
+	
 	-- Universal Dragging
 	local dragging = false
 	local dragInput, dragStart, startPos
-
+	
 	local function update(input)
 		if not dragging then return end
 		local delta = input.Position - dragStart
@@ -170,32 +172,26 @@ return function()
 			startPos.Y.Scale, startPos.Y.Offset + delta.Y
 		)
 	end
-
+	
 	container.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			dragging = true
 			dragStart = input.Position
 			startPos = container.Position
-
+	
 			input.Changed:Connect(function()
 				if input.UserInputState == Enum.UserInputState.End then dragging = false end
 			end)
 		end
 	end)
-
+	
 	container.InputChanged:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
 			dragInput = input
 		end
 	end)
-
+	
 	UserInputService.InputChanged:Connect(function(input)
 		if input == dragInput then update(input) end
 	end)
-
-	-- Fade-in
-	local fadeInfo = TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-	TweenService:Create(container, fadeInfo, {BackgroundTransparency = 0}):Play()
-	TweenService:Create(button, fadeInfo, {BackgroundTransparency = 0}):Play()
-	TweenService:Create(title, fadeInfo, {TextTransparency = 0}):Play()
 end
