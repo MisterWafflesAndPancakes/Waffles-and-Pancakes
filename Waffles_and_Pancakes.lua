@@ -97,7 +97,7 @@ return function()
 	containerCorner.CornerRadius = UDim.new(0, 12)
 	containerCorner.Parent = container
 	
-	-- Universal Dragging
+	-- Universal Dragging (MOBILE + PC SUPPORTED)
 	local UserInputService = game:GetService("UserInputService")
 
 	local dragging = false
@@ -145,10 +145,31 @@ return function()
 	button.Text = "Enable Auto-Buy"
 	button.BackgroundColor3 = Color3.fromRGB(60, 180, 75)
 	button.TextColor3 = Color3.new(1, 1, 1)
-	button.Font = Enum.Font.GothamBold
+	button.Font = Enum.Font.Ubtunu
 	button.TextSize = 16
 	button.AutoButtonColor = false
 	button.Parent = container
+
+	-- Title label
+	local title = Instance.new("TextLabel")
+	title.Size = UDim2.new(1, 0, 0, 20)
+	title.Position = UDim2.new(0, 0, 0, 0)
+	title.BackgroundTransparency = 1
+	title.Text = "Waffles and Pancakes"
+	title.TextColor3 = Color3.fromRGB(255, 0, 0) -- Start color
+	title.Font = Enum.Font.Ubtunu
+	title.TextSize = 16
+	title.Parent = container
+
+	-- RGB cycle effect
+	task.spawn(function()
+		while true do
+			for hue = 0, 1, 0.01 do
+				title.TextColor3 = Color3.fromHSV(hue, 1, 1)
+				task.wait(0.03)
+			end
+		end
+	end)
 	
 	local buttonCorner = Instance.new("UICorner")
 	buttonCorner.CornerRadius = UDim.new(0, 10)
@@ -171,9 +192,11 @@ return function()
 	local function UpdateButtonAppearance()
 		if AutoBuyEnabled then
 			button.Text = "Disable Auto-Buy"
+			button.Font = Enum.Font.Ubtunu
 			button.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
 		else
 			button.Text = "Enable Auto-Buy"
+			button.Font = Enum.Font.Ubtunu
 			button.BackgroundColor3 = Color3.fromRGB(60, 180, 75)
 		end
 	end
