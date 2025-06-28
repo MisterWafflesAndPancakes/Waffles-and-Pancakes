@@ -9,6 +9,7 @@ return function()
 	-- [PUT SEEDNAME HERE TO SELECT SEED] [COPY THE SEED SHOP NAME EXACTLY AS IT IS DISPLAYED]
 	local SeedsToBuy = {
 	   "Sugar Apple",
+	   "Pitcher Plant"
 	   "Feijoa",
 	   "Loquat",
 	   "Prickly Pear",
