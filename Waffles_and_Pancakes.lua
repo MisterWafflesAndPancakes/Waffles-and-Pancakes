@@ -24,6 +24,7 @@ return function()
 	    "Godly Sprinkler",
 	    "Master Sprinkler",
 	    "Tanning Mirror",
+	    "Magnifying Glass",
 	}
 	
 	local AutoBuyEnabled = false
