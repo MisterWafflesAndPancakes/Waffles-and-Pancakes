@@ -1,10 +1,11 @@
 return function()
 	local player = game.Players.LocalPlayer
 	_G.SelectedPlayer = nil
+	_G.MainLoopActive = false
 	
-	-- Player configs
-	local playerConfigs = {
-	    [1] = {
+	-- Configs
+	local config = {
+	    dummy = {
 	        points = {
 	            Vector3.new(-139.10, 29.82, 408.20), -- Ring 1
 	            Vector3.new(-137.85, 29.82, 487.46)  -- Ring 4
@@ -12,7 +13,7 @@ return function()
 	        deathDelay = 1.2,
 	        teleportDelay = 6.5
 	    },
-	    [2] = {
+	    main = {
 	        points = {
 	            Vector3.new(-144.95, 29.82, 400.64), -- Ring 1
 	            Vector3.new(-142.56, 29.82, 498.20)  -- Ring 4
@@ -22,118 +23,86 @@ return function()
 	    }
 	}
 	
-	-- Exclusive teleport-only for Player 1 (dummy)
-	local function teleportOnlyDummy(pos)
+	-- Teleport-only
+	local function teleportOnly(pos)
 	    local char = player.Character or player.CharacterAdded:Wait()
 	    if not char then return end
-	
 	    local hrp = char:FindFirstChild("HumanoidRootPart")
-	    if hrp then
-	        hrp.CFrame = CFrame.new(pos)
-	    end
+	    if hrp then hrp.CFrame = CFrame.new(pos) end
 	end
 	
-	-- Standard teleport + kill
-	local function teleportAndDie(pos, deathDelay)
-	    local char = player.Character or player.CharacterAdded:Wait()
-	    if not char then return end
-	
-	    local hrp = char:FindFirstChild("HumanoidRootPart")
-	    local hum = char:FindFirstChild("Humanoid")
-	
-	    if not hrp or not hum then return end
-	
-	    hrp.CFrame = CFrame.new(pos)
-	    task.wait(deathDelay)
-	
-	    hum.Health = 0
-	    char:BreakJoints()
-	
-	    repeat task.wait() until player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-	end
-	
-	-- Kill-only for Player 1 after trigger
+	-- Kill-only
 	local function killCharacter(deathDelay)
 	    task.wait(deathDelay)
-	
 	    local char = player.Character or player.CharacterAdded:Wait()
 	    if not char then return end
-	
 	    local hum = char:FindFirstChild("Humanoid")
 	    if hum then
 	        hum.Health = 0
 	        char:BreakJoints()
 	    end
-	
 	    repeat task.wait() until player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 	end
 	
-	-- Wait for Player 2 to teleport near target
-	local function waitForPlayer2Teleport(targetPos)
-	    local threshold = 10
-	    local otherPlayer = nil
-	
-	    for _, p in pairs(game.Players:GetPlayers()) do
-	        if p ~= player then
-	            otherPlayer = p
-	            break
-	        end
-	    end
-	
-	    if not otherPlayer then return end
-	
-	    repeat
-	        if _G.SelectedPlayer ~= 1 then return end
-	
-	        local char = otherPlayer.Character
-	        local hrp = char and char:FindFirstChild("HumanoidRootPart")
-	
-	        if hrp and (hrp.Position - targetPos).Magnitude < threshold then
-	            break
-	        end
-	
-	        task.wait(0.5)
-	    until false
+	-- Teleport + kill
+	local function teleportAndDie(pos, deathDelay)
+	    local char = player.Character or player.CharacterAdded:Wait()
+	    if not char then return end
+	    local hrp = char:FindFirstChild("HumanoidRootPart")
+	    local hum = char:FindFirstChild("Humanoid")
+	    if not hrp or not hum then return end
+	    hrp.CFrame = CFrame.new(pos)
+	    task.wait(deathDelay)
+	    hum.Health = 0
+	    char:BreakJoints()
+	    repeat task.wait() until player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 	end
 	
-	-- Loop logic
-	local function runLoop(playerId)
-	    local config = playerConfigs[playerId]
+	-- Dummy loop
+	local function runDummyLoop()
+	    local points = config.dummy.points
+	    local deathDelay = config.dummy.deathDelay
+	    local teleportDelay = config.dummy.teleportDelay
 	
-	    while _G.SelectedPlayer == playerId do
-	        -- Phase A: Ring 4
-	        if playerId == 1 then
-	            repeat
-	                if _G.SelectedPlayer ~= playerId then return end
-	                teleportOnlyDummy(config.points[2])
-	                task.wait(config.teleportDelay)
-	            until false -- broken by Player 2 detection below
+	    while _G.SelectedPlayer == "DUMMY" do
+	        -- Ring 4
+	        repeat
+	            teleportOnly(points[2])
+	            task.wait(teleportDelay)
+	        until _G.MainLoopActive
 	
-	            waitForPlayer2Teleport(config.points[2])
-	            teleportOnlyDummy(config.points[2])
-	            killCharacter(config.deathDelay)
-	            task.wait(config.teleportDelay)
-	        else
-	            teleportAndDie(config.points[2], config.deathDelay)
-	            task.wait(config.teleportDelay)
-	        end
+	        teleportOnly(points[2])
+	        killCharacter(deathDelay)
+	        task.wait(teleportDelay)
 	
-	        -- Phase B: Ring 1
-	        if playerId == 1 then
-	            repeat
-	                if _G.SelectedPlayer ~= playerId then return end
-	                teleportOnlyDummy(config.points[1])
-	                task.wait(config.teleportDelay)
-	            until false -- broken by Player 2 detection below
+	        -- Ring 1
+	        repeat
+	            teleportOnly(points[1])
+	            task.wait(teleportDelay)
+	        until _G.MainLoopActive
 	
-	            waitForPlayer2Teleport(config.points[1])
-	            teleportOnlyDummy(config.points[1])
-	            killCharacter(config.deathDelay)
-	            task.wait(config.teleportDelay)
-	        else
-	            teleportAndDie(config.points[1], config.deathDelay)
-	            task.wait(config.teleportDelay)
-	        end
+	        teleportOnly(points[1])
+	        killCharacter(deathDelay)
+	        task.wait(teleportDelay)
+	    end
+	end
+	
+	-- Main loop
+	local function runMainLoop()
+	    local points = config.main.points
+	    local deathDelay = config.main.deathDelay
+	    local teleportDelay = config.main.teleportDelay
+	
+	    while _G.SelectedPlayer == "MAIN" do
+	        _G.MainLoopActive = true
+	        teleportAndDie(points[2], deathDelay)
+	        task.wait(teleportDelay)
+	
+	        _G.MainLoopActive = true
+	        teleportAndDie(points[1], deathDelay)
+	        task.wait(teleportDelay)
+	
+	        _G.MainLoopActive = false
 	    end
 	end
 	
@@ -165,36 +134,36 @@ return function()
 	
 	-- Button logic
 	button1.MouseButton1Click:Connect(function()
-	    if _G.SelectedPlayer == 1 then
+	    if _G.SelectedPlayer == "DUMMY" then
 	        _G.SelectedPlayer = nil
 	        button1.Text = "PLAYER 1: DUMMY"
 	        button1.BackgroundColor3 = Color3.fromRGB(100, 170, 255)
-	        print("PLAYER 1 stopped")
+	        print("Dummy stopped")
 	    else
-	        _G.SelectedPlayer = 1
+	        _G.SelectedPlayer = "DUMMY"
 	        button1.Text = "PLAYER 1: RUNNING"
 	        button1.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
 	        button2.Text = "PLAYER 2: MAIN"
 	        button2.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
-	        print("PLAYER 1 started")
-	        coroutine.wrap(function() runLoop(1) end)()
+	        print("Dummy started")
+	        coroutine.wrap(runDummyLoop)()
 	    end
 	end)
 	
 	button2.MouseButton1Click:Connect(function()
-	    if _G.SelectedPlayer == 2 then
+	    if _G.SelectedPlayer == "MAIN" then
 	        _G.SelectedPlayer = nil
 	        button2.Text = "PLAYER 2: MAIN"
 	        button2.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
-	        print("PLAYER 2 stopped")
+	        print("Main stopped")
 	    else
-	        _G.SelectedPlayer = 2
+	        _G.SelectedPlayer = "MAIN"
 	        button2.Text = "PLAYER 2: RUNNING"
 	        button2.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
 	        button1.Text = "PLAYER 1: DUMMY"
 	        button1.BackgroundColor3 = Color3.fromRGB(100, 170, 255)
-	        print("PLAYER 2 started")
-	        coroutine.wrap(function() runLoop(2) end)()
+	        print("Main started")
+	        coroutine.wrap(runMainLoop)()
 	    end
 	end)
 end
