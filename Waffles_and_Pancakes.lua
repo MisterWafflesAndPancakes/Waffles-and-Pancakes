@@ -1,211 +1,143 @@
 return function()
-	local ReplicatedStorage = game:GetService("ReplicatedStorage")
-	local Players = game:GetService("Players")
-	local LocalPlayer = Players.LocalPlayer
-	local TweenService = game:GetService("TweenService")
-	local UserInputService = game:GetService("UserInputService")
-	local GameEvents = ReplicatedStorage:WaitForChild("GameEvents")
+	local player = game.Players.LocalPlayer
+	_G.SelectedPlayer = nil
 	
-	-- [PUT SEEDNAME HERE TO SELECT SEED] [COPY THE SEED SHOP NAME EXACTLY AS IT IS DISPLAYED]
-	local SeedsToBuy = {
-	   "Sugar Apple",
-	   "Pitcher Plant",
-	   "Feijoa",
-	   "Loquat",
-	   "Prickly Pear",
-	   "Bell Pepper",
-	   "Kiwi",
+	-- 🧠 Player configs
+	local playerConfigs = {
+	    [1] = {
+	        points = {
+	            Vector3.new(-139.10, 29.82, 408.20),
+	            Vector3.new(-137.85, 29.82, 487.46)
+	        },
+	        deathDelay = 0.8,
+	        teleportDelay = 6.5
+	    },
+	    [2] = {
+	        points = {
+	            Vector3.new(-144.95, 29.82, 400.64),
+	            Vector3.new(-142.56, 29.82, 498.20)
+	        },
+	        deathDelay = 0.4,
+	        teleportDelay = 5.4
+	    }
 	}
 	
-	local GearsToBuy = {
-	    "Watering Can",
-	    "Basic Sprinkler",
-	    "Advanced Sprinkler",
-	    "Godly Sprinkler",
-	    "Master Sprinkler",
-	    "Tanning Mirror",
-	    "Magnifying Glass",
-	}
+	-- ⚔️ Teleport and kill
+	local function teleportAndDie(pos, deathDelay)
+	    local char = player.Character or player.CharacterAdded:Wait()
+	    local hrp = char:FindFirstChild("HumanoidRootPart")
+	    local hum = char:FindFirstChild("Humanoid")
 	
-	local AutoBuyEnabled = false
-	local AutoBuyInterval = 1.5 -- [SECONDS]
+	    if not hrp or not hum then return end
 	
-	-- [BUY SEED FUNC]
-	local function BuySeed(seedName)
-	    if GameEvents:FindFirstChild("BuySeedStock") then
-	        GameEvents.BuySeedStock:FireServer(seedName)
-	        print("Bought seed:", seedName)
-	    else
-	        warn("BuySeedStock event not found")
+	    hrp.CFrame = CFrame.new(pos)
+	    task.wait(deathDelay)
+	
+	    if hum then
+	        hum.Health = 0
+	        char:BreakJoints()
 	    end
+	
+	    repeat task.wait() until player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 	end
 	
-	-- [BUY GEAR FUNC]
-	local function BuyGear(gearName)
-	    if GameEvents:FindFirstChild("BuyGearStock") then
-	        GameEvents.BuyGearStock:FireServer(gearName)
-	        print("Bought gear:", gearName)
-	    else
-	        warn("BuyGearStock event not found")
-	    end
+	-- 🧠 Wait until sparring starts on Ring 1 or Ring 4
+	local function waitForSparStart()
+	    local rs = game:GetService("ReplicatedStorage")
+	    local getValue = rs:FindFirstChild("Get_Value_From_Workspace")
+	    if not getValue then return end
+	
+	    repeat
+	        if _G.SelectedPlayer == nil then return end
+	
+	        local ring1, ring4 = 0, 0
+	
+	        local success1, result1 = pcall(function()
+	            return getValue:WaitForChild("Get_Time_Spar_Ring1"):InvokeServer()
+	        end)
+	        local success4, result4 = pcall(function()
+	            return getValue:WaitForChild("Get_Time_Spar_Ring4"):InvokeServer()
+	        end)
+	
+	        ring1 = success1 and result1 or 0
+	        ring4 = success4 and result4 or 0
+	
+	        task.wait(1)
+	    until ring1 > 0 or ring4 > 0
 	end
 	
-	local AutoBuyLoop
+	-- 🔁 Loop logic
+	local function runLoop(playerId)
+	    local config = playerConfigs[playerId]
+	    while _G.SelectedPlayer == playerId do
+	        waitForSparStart()
 	
-	local function StartAutoBuy()
-	    if AutoBuyLoop then return end
-	    AutoBuyEnabled = true
-	    AutoBuyLoop = coroutine.create(function()
-	        while AutoBuyEnabled do
-	            for _, seed in ipairs(SeedsToBuy) do
-	                BuySeed(seed)
-	            end
-	            for _, gear in ipairs(GearsToBuy) do
-	                BuyGear(gear)
-	           end
-	            wait(AutoBuyInterval)
+	        for _, pos in ipairs(config.points) do
+	            teleportAndDie(pos, config.deathDelay)
+	            task.wait(config.teleportDelay)
+	            if _G.SelectedPlayer ~= playerId then break end
 	        end
-	    end)
-	    coroutine.resume(AutoBuyLoop)
+	    end
 	end
 	
-	local function StopAutoBuy()
-	    AutoBuyEnabled = false
-	    AutoBuyLoop = nil
-	end
-	
-	-- Create a simple ScreenGui with a toggle button
+	-- 🖱️ GUI Setup
 	local screenGui = Instance.new("ScreenGui")
-	screenGui.Name = "AutoBuyGui"
+	screenGui.Name = "PlayerToggleGui"
 	screenGui.ResetOnSpawn = false
-	screenGui.IgnoreGuiInset = true
-	screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+	screenGui.Parent = player:WaitForChild("PlayerGui")
 	
-	-- More GUI Elements
-	local container = Instance.new("Frame")
-	container.Size = UDim2.new(0, 170, 0, 60)
-	container.Position = UDim2.new(0, 20, 0, 20)
-	container.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-	container.BorderSizePixel = 0
-	container.Active = true
-	container.Parent = screenGui
+	local button1 = Instance.new("TextButton")
+	button1.Size = UDim2.new(0, 200, 0, 40)
+	button1.Position = UDim2.new(0, 20, 0, 20)
+	button1.Text = "PLAYER 1: DUMMY"
+	button1.BackgroundColor3 = Color3.fromRGB(100, 170, 255)
+	button1.TextColor3 = Color3.new(1, 1, 1)
+	button1.Font = Enum.Font.SourceSansBold
+	button1.TextSize = 20
+	button1.Parent = screenGui
 	
-	local containerCorner = Instance.new("UICorner")
-	containerCorner.CornerRadius = UDim.new(0, 12)
-	containerCorner.Parent = container
+	local button2 = Instance.new("TextButton")
+	button2.Size = UDim2.new(0, 200, 0, 40)
+	button2.Position = UDim2.new(0, 20, 0, 70)
+	button2.Text = "PLAYER 2: MAIN"
+	button2.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
+	button2.TextColor3 = Color3.new(1, 1, 1)
+	button2.Font = Enum.Font.SourceSansBold
+	button2.TextSize = 20
+	button2.Parent = screenGui
 	
-	-- Title label
-	local title = Instance.new("TextLabel")
-	title.Size = UDim2.new(1, 0, 0, 20)
-	title.Position = UDim2.new(0, 0, 0, 0)
-	title.BackgroundTransparency = 1
-	title.Text = "Waffles and Pancakes"
-	title.TextColor3 = Color3.fromRGB(255, 0, 0) -- Start color
-	title.Font = Enum.Font.GothamSemibold
-	title.TextSize = 16
-	title.Parent = container
-	
-	-- RGB cycle effect
-	task.spawn(function()
-		while true do
-			for hue = 0, 1, 0.01 do
-				title.TextColor3 = Color3.fromHSV(hue, 1, 1)
-				task.wait(0.03)
-			end
-		end
+	-- 🎮 Button logic
+	button1.MouseButton1Click:Connect(function()
+	    if _G.SelectedPlayer == 1 then
+	        _G.SelectedPlayer = nil
+	        button1.Text = "PLAYER 1: DUMMY"
+	        button1.BackgroundColor3 = Color3.fromRGB(100, 170, 255)
+	        print("PLAYER 1 stopped")
+	    else
+	        _G.SelectedPlayer = 1
+	        button1.Text = "PLAYER 1: RUNNING"
+	        button1.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+	        button2.Text = "PLAYER 2: MAIN"
+	        button2.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
+	        print("PLAYER 1 started")
+	        coroutine.wrap(function() runLoop(1) end)()
+	    end
 	end)
 	
-	-- Universal Dragging
-	local UserInputService = game:GetService("UserInputService")
-	
-	local dragging = false
-	local dragInput, dragStart, startPos
-	
-	local function update(input)
-		if not dragging then return end
-		local delta = input.Position - dragStart
-		container.Position = UDim2.new(
-			startPos.X.Scale, startPos.X.Offset + delta.X,
-			startPos.Y.Scale, startPos.Y.Offset + delta.Y
-		)
-	end
-	
-	container.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = true
-			dragStart = input.Position
-			startPos = container.Position
-	
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					dragging = false
-				end
-			end)
-		end
+	button2.MouseButton1Click:Connect(function()
+	    if _G.SelectedPlayer == 2 then
+	        _G.SelectedPlayer = nil
+	        button2.Text = "PLAYER 2: MAIN"
+	        button2.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
+	        print("PLAYER 2 stopped")
+	    else
+	        _G.SelectedPlayer = 2
+	        button2.Text = "PLAYER 2: RUNNING"
+	        button2.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+	        button1.Text = "PLAYER 1: DUMMY"
+	        button1.BackgroundColor3 = Color3.fromRGB(100, 170, 255)
+	        print("PLAYER 2 started")
+	        coroutine.wrap(function() runLoop(2) end)()
+	    end
 	end)
-	
-	container.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-			dragInput = input
-		end
-	end)
-	
-	UserInputService.InputChanged:Connect(function(input)
-		if input == dragInput then
-			update(input)
-		end
-	end)
-	
-	-- Button
-	local button = Instance.new("TextButton")
-	button.Size = UDim2.new(1, -20, 1, -20)
-	button.Position = UDim2.new(0, 10, 0, 10)
-	button.Text = "Enable Auto-Buy"
-	button.BackgroundColor3 = Color3.fromRGB(60, 180, 75)
-	button.TextColor3 = Color3.new(1, 1, 1)
-	button.Font = Enum.Font.GothamBold
-	button.TextSize = 16
-	button.AutoButtonColor = false
-	button.Parent = container
-	
-	local buttonCorner = Instance.new("UICorner")
-	buttonCorner.CornerRadius = UDim.new(0, 10)
-	buttonCorner.Parent = button
-	
-	local buttonStroke = Instance.new("UIStroke")
-	buttonStroke.Color = Color3.fromRGB(255, 255, 255)
-	buttonStroke.Thickness = 1.2
-	buttonStroke.Parent = button
-	
-	-- Hover effect
-	button.MouseEnter:Connect(function()
-		button.BackgroundColor3 = Color3.fromRGB(70, 200, 85)
-	end)
-	button.MouseLeave:Connect(function()
-		button.BackgroundColor3 = AutoBuyEnabled and Color3.fromRGB(200, 60, 60) or Color3.fromRGB(60, 180, 75)
-	end)
-	
-	-- Button appearance update
-	local function UpdateButtonAppearance()
-		if AutoBuyEnabled then
-			button.Text = "Disable Auto-Buy"
-			button.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
-		else
-			button.Text = "Enable Auto-Buy"
-			button.BackgroundColor3 = Color3.fromRGB(60, 180, 75)
-		end
-	end
-	
-	-- Toggle function
-	local function ToggleAutoBuy()
-		if AutoBuyEnabled then
-			StopAutoBuy()
-		else
-			StartAutoBuy()
-		end
-		UpdateButtonAppearance()
-	end
-	
-	button.MouseButton1Click:Connect(ToggleAutoBuy)
-	UpdateButtonAppearance()	
 end
