@@ -1,163 +1,154 @@
 return function()
 	local player = game.Players.LocalPlayer
-	_G.SelectedPlayer = nil
-	_G.Ring1_P1 = false
-	_G.Ring1_P2 = false
-	_G.Ring4_P1 = false
-	_G.Ring4_P2 = false
+	local UserInputService = game:GetService("UserInputService")
+	local activeRole = nil
 	
-	-- Trigger setup
-	workspace.Spar_Ring1.Player1_Button.Touch.Touched:Connect(function(hit)
-	    if hit and hit.Parent == player.Character then
-	        _G.Ring1_P1 = true
-	    end
-	end)
-	
-	workspace.Spar_Ring1.Player2_Button.Touch.Touched:Connect(function(hit)
-	    if hit and hit.Parent == player.Character then
-	        _G.Ring1_P2 = true
-	    end
-	end)
-	
-	workspace.Spar_Ring4.Player1_Button.Touch.Touched:Connect(function(hit)
-	    if hit and hit.Parent == player.Character then
-	        _G.Ring4_P1 = true
-	    end
-	end)
-	
-	workspace.Spar_Ring4.Player2_Button.Touch.Touched:Connect(function(hit)
-	    if hit and hit.Parent == player.Character then
-	        _G.Ring4_P2 = true
-	    end
-	end)
-	
-	-- Teleport and kill
-	local function teleportAndDie(pos, deathDelay)
-	    local char = player.Character or player.CharacterAdded:Wait()
-	    if not char then return end
-	
-	    local hrp = char:FindFirstChild("HumanoidRootPart")
-	    local hum = char:FindFirstChild("Humanoid")
-	
-	    if not hrp or not hum then return end
-	
-	    hrp.CFrame = CFrame.new(pos)
-	    task.wait(deathDelay)
-	
-	    hum.Health = 0
-	    char:BreakJoints()
-	
-	    repeat task.wait() until player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-	end
-	
-	-- Loop logic: Ring 4 → wait for both touches → kill → Ring 1 → wait for both touches → kill → repeat
-	local playerConfigs = {
+	-- Configs
+	local configs = {
 	    [1] = {
-	        points = {
-	            Vector3.new(-139.10, 29.82, 408.20),
-	            Vector3.new(-137.85, 29.82, 487.46)
-	        },
-	        deathDelay = 0.8,
-	        teleportDelay = 6.5
+	        name = "PLAYER 1: DUMMY",
+	        teleportDelay = 0.4,
+	        deathDelay = 0.52,
+	        cycleDelay = 5.8
 	    },
 	    [2] = {
-	        points = {
-	            Vector3.new(-144.95, 29.82, 400.64),
-	            Vector3.new(-142.56, 29.82, 498.20)
-	        },
-	        deathDelay = 0.4,
-	        teleportDelay = 5.4
+	        name = "PLAYER 2: MAIN",
+	        teleportDelay = 0.4,
+	        deathDelay = 0.52,
+	        cycleDelay = 5.8
 	    }
 	}
 	
-	local function runLoop(playerId)
-	    local config = playerConfigs[playerId]
+	-- 🛡️ Constant-check respawn gate
+	local function waitForRespawn()
+	    repeat task.wait()
+	    until player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+	end
 	
-	    while _G.SelectedPlayer == playerId do
-	        -- Ring 4
-	        repeat
-	            if _G.SelectedPlayer ~= playerId then return end
-	            teleportAndDie(config.points[2], 0)
+	-- 🧱 Core loop
+	local function runLoop(role)
+	    local config = configs[role]
+	    local points
+	
+	    if role == 1 then
+	        points = {
+	            workspace.Spar_Ring1.Player1_Button.Position,
+	            workspace.Spar_Ring4.Player1_Button.Position
+	        }
+	    elseif role == 2 then
+	        points = {
+	            workspace.Spar_Ring1.Player2_Button.Position,
+	            workspace.Spar_Ring4.Player2_Button.Position
+	        }
+	    else
+	        return
+	    end
+	
+	    while activeRole == role do
+	        for _, pos in ipairs(points) do
+	            local cycleStart = os.clock()
+	
+	            waitForRespawn()
+	            local char = player.Character
+	            local hrp = char:WaitForChild("HumanoidRootPart")
+	            local hum = char:WaitForChild("Humanoid")
+	
 	            task.wait(config.teleportDelay)
-	        until _G.Ring4_P1 and _G.Ring4_P2
+	            pcall(function()
+	                hrp.CFrame = CFrame.new(pos)
+	            end)
 	
-	        teleportAndDie(config.points[2], config.deathDelay)
-	        _G.Ring4_P1 = false
-	        _G.Ring4_P2 = false
-	        task.wait(config.teleportDelay)
+	            task.wait(config.deathDelay)
+	            hum.Health = 0
+	            char:BreakJoints()
 	
-	        -- Ring 1
-	        repeat
-	            if _G.SelectedPlayer ~= playerId then return end
-	            teleportAndDie(config.points[1], 0)
-	            task.wait(config.teleportDelay)
-	        until _G.Ring1_P1 and _G.Ring1_P2
+	            waitForRespawn()
 	
-	        teleportAndDie(config.points[1], config.deathDelay)
-	        _G.Ring1_P1 = false
-	        _G.Ring1_P2 = false
-	        task.wait(config.teleportDelay)
+	            local elapsed = os.clock() - cycleStart
+	            local remaining = config.cycleDelay - elapsed
+	            if remaining > 0 then task.wait(remaining) end
+	        end
 	    end
 	end
 	
-	-- GUI Setup
+	-- 🎮 GUI Setup
 	local screenGui = Instance.new("ScreenGui")
-	screenGui.Name = "PlayerToggleGui"
+	screenGui.Name = "RoleToggleGui"
 	screenGui.ResetOnSpawn = false
 	screenGui.Parent = player:WaitForChild("PlayerGui")
 	
-	local button1 = Instance.new("TextButton")
-	button1.Size = UDim2.new(0, 200, 0, 40)
-	button1.Position = UDim2.new(0, 20, 0, 20)
-	button1.Text = "PLAYER 1: DUMMY"
-	button1.BackgroundColor3 = Color3.fromRGB(100, 170, 255)
-	button1.TextColor3 = Color3.new(1, 1, 1)
-	button1.Font = Enum.Font.SourceSansBold
-	button1.TextSize = 20
-	button1.Parent = screenGui
+	local function createButton(text, position)
+	    local button = Instance.new("TextButton")
+	    button.Size = UDim2.new(0, 200, 0, 40)
+	    button.Position = position
+	    button.Text = text
+	    button.BackgroundColor3 = Color3.fromRGB(100, 170, 255)
+	    button.TextColor3 = Color3.new(1, 1, 1)
+	    button.Font = Enum.Font.SourceSansBold
+	    button.TextSize = 20
+	    button.Parent = screenGui
+	    return button
+	end
 	
-	local button2 = Instance.new("TextButton")
-	button2.Size = UDim2.new(0, 200, 0, 40)
-	button2.Position = UDim2.new(0, 20, 0, 70)
-	button2.Text = "PLAYER 2: MAIN"
-	button2.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
-	button2.TextColor3 = Color3.new(1, 1, 1)
-	button2.Font = Enum.Font.SourceSansBold
-	button2.TextSize = 20
-	button2.Parent = screenGui
+	-- 🖱️📱 Universal draggable support
+	local function makeDraggable(guiObject)
+	    local dragging = false
+	    local dragStart, startPos
 	
-	-- Button logic
-	button1.MouseButton1Click:Connect(function()
-	    if _G.SelectedPlayer == 1 then
-	        _G.SelectedPlayer = nil
+	    guiObject.InputBegan:Connect(function(input)
+	        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+	            dragging = true
+	            dragStart = input.Position
+	            startPos = guiObject.Position
+	        end
+	    end)
+	
+	    guiObject.InputChanged:Connect(function(input)
+	        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+	            local delta = input.Position - dragStart
+	            guiObject.Position = UDim2.new(
+	                startPos.X.Scale,
+	                startPos.X.Offset + delta.X,
+	                startPos.Y.Scale,
+	                startPos.Y.Offset + delta.Y
+	            )
+	        end
+	    end)
+	
+	    UserInputService.InputEnded:Connect(function(input)
+	        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+	            dragging = false
+	        end
+	    end)
+	end
+	
+	-- 🎮 Create buttons
+	local button1 = createButton("PLAYER 1: DUMMY", UDim2.new(0, 20, 0, 20))
+	local button2 = createButton("PLAYER 2: MAIN", UDim2.new(0, 20, 0, 70))
+	
+	makeDraggable(button1)
+	makeDraggable(button2)
+	
+	-- 🔁 Button logic
+	local function toggleRole(role)
+	    if activeRole == role then
+	        activeRole = nil
 	        button1.Text = "PLAYER 1: DUMMY"
-	        button1.BackgroundColor3 = Color3.fromRGB(100, 170, 255)
-	        print("PLAYER 1 stopped")
-	    else
-	        _G.SelectedPlayer = 1
-	        button1.Text = "PLAYER 1: RUNNING"
-	        button1.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
 	        button2.Text = "PLAYER 2: MAIN"
+	        button1.BackgroundColor3 = Color3.fromRGB(100, 170, 255)
 	        button2.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
-	        print("PLAYER 1 started")
-	        coroutine.wrap(function() runLoop(1) end)()
+	        print(configs[role].name .. " stopped")
+	    else
+	        activeRole = role
+	        button1.Text = role == 1 and "PLAYER 1: RUNNING" or "PLAYER 1: DUMMY"
+	        button2.Text = role == 2 and "PLAYER 2: RUNNING" or "PLAYER 2: MAIN"
+	        button1.BackgroundColor3 = role == 1 and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(100, 170, 255)
+	        button2.BackgroundColor3 = role == 2 and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(255, 100, 100)
+	        print(configs[role].name .. " started")
+	        coroutine.wrap(function() runLoop(role) end)()
 	    end
-	end)
+	end
 	
-	button2.MouseButton1Click:Connect(function()
-	    if _G.SelectedPlayer == 2 then
-	        _G.SelectedPlayer = nil
-	        button2.Text = "PLAYER 2: MAIN"
-	        button2.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
-	        print("PLAYER 2 stopped")
-	    else
-	        _G.SelectedPlayer = 2
-	        button2.Text = "PLAYER 2: RUNNING"
-	        button2.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
-	        button1.Text = "PLAYER 1: DUMMY"
-	        button1.BackgroundColor3 = Color3.fromRGB(100, 170, 255)
-	        print("PLAYER 2 started")
-	        coroutine.wrap(function() runLoop(2) end)()
-	    end
-	end)
+	button1.MouseButton1Click:Connect(function() toggleRole(1) end)
+	button2.MouseButton1Click:Connect(function() toggleRole(2) end)
 end
