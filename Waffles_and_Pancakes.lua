@@ -52,7 +52,7 @@ return function()
 	    repeat task.wait() until player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 	end
 	
-	-- Kill-only for Player 1 after spar starts
+	-- Kill-only for Player 1 after trigger
 	local function killCharacter(deathDelay)
 	    task.wait(deathDelay)
 	
@@ -68,69 +68,70 @@ return function()
 	    repeat task.wait() until player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 	end
 	
+	-- Wait for Player 2 to teleport near target
+	local function waitForPlayer2Teleport(targetPos)
+	    local threshold = 10
+	    local otherPlayer = nil
+	
+	    for _, p in pairs(game.Players:GetPlayers()) do
+	        if p ~= player then
+	            otherPlayer = p
+	            break
+	        end
+	    end
+	
+	    if not otherPlayer then return end
+	
+	    repeat
+	        if _G.SelectedPlayer ~= 1 then return end
+	
+	        local char = otherPlayer.Character
+	        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+	
+	        if hrp and (hrp.Position - targetPos).Magnitude < threshold then
+	            break
+	        end
+	
+	        task.wait(0.5)
+	    until false
+	end
+	
 	-- Loop logic
 	local function runLoop(playerId)
 	    local config = playerConfigs[playerId]
-	    local rs = game:GetService("ReplicatedStorage")
-	    local getValue = rs:FindFirstChild("Get_Value_From_Workspace")
-	    if not getValue then return end
 	
 	    while _G.SelectedPlayer == playerId do
 	        -- Phase A: Ring 4
-	        repeat
-	            if _G.SelectedPlayer ~= playerId then return end
-	
-	            if playerId == 1 then
+	        if playerId == 1 then
+	            repeat
+	                if _G.SelectedPlayer ~= playerId then return end
 	                teleportOnlyDummy(config.points[2])
-	            else
-	                teleportAndDie(config.points[2], 0)
-	            end
+	                task.wait(config.teleportDelay)
+	            until false -- broken by Player 2 detection below
 	
+	            waitForPlayer2Teleport(config.points[2])
+	            teleportOnlyDummy(config.points[2])
+	            killCharacter(config.deathDelay)
 	            task.wait(config.teleportDelay)
-	
-	            local ring4
-	            local success4, result4 = pcall(function()
-	                return getValue:WaitForChild("Get_Time_Spar_Ring4"):InvokeServer()
-	            end)
-	            if success4 then ring4 = result4 end
-	        until ring4 and ring4 > 0
-	
-	        if _G.SelectedPlayer == playerId then
-	            if playerId == 1 then
-	                teleportOnlyDummy(config.points[2])
-	                killCharacter(config.deathDelay)
-	            else
-	                teleportAndDie(config.points[2], config.deathDelay)
-	            end
+	        else
+	            teleportAndDie(config.points[2], config.deathDelay)
 	            task.wait(config.teleportDelay)
 	        end
 	
 	        -- Phase B: Ring 1
-	        repeat
-	            if _G.SelectedPlayer ~= playerId then return end
-	
-	            if playerId == 1 then
+	        if playerId == 1 then
+	            repeat
+	                if _G.SelectedPlayer ~= playerId then return end
 	                teleportOnlyDummy(config.points[1])
-	            else
-	                teleportAndDie(config.points[1], 0)
-	            end
+	                task.wait(config.teleportDelay)
+	            until false -- broken by Player 2 detection below
 	
+	            waitForPlayer2Teleport(config.points[1])
+	            teleportOnlyDummy(config.points[1])
+	            killCharacter(config.deathDelay)
 	            task.wait(config.teleportDelay)
-	
-	            local ring1
-	            local success1, result1 = pcall(function()
-	                return getValue:WaitForChild("Get_Time_Spar_Ring1"):InvokeServer()
-	            end)
-	            if success1 then ring1 = result1 end
-	        until ring1 and ring1 > 0
-	
-	        if _G.SelectedPlayer == playerId then
-	            if playerId == 1 then
-	                teleportOnlyDummy(config.points[1])
-	                killCharacter(config.deathDelay)
-	            else
-	                teleportAndDie(config.points[1], config.deathDelay)
-	            end
+	        else
+	            teleportAndDie(config.points[1], config.deathDelay)
 	            task.wait(config.teleportDelay)
 	        end
 	    end
