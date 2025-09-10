@@ -1,19 +1,18 @@
 return function()
 	local player = game.Players.LocalPlayer
 	_G.SelectedPlayer = nil
-	_G.MainLoopActive = false
 	
-	-- Configs
-	local config = {
-	    dummy = {
+	-- Player configs
+	local playerConfigs = {
+	    DUMMY = {
 	        points = {
 	            Vector3.new(-139.10, 29.82, 408.20), -- Ring 1
 	            Vector3.new(-137.85, 29.82, 487.46)  -- Ring 4
 	        },
-	        deathDelay = 1.2,
+	        deathDelay = 0.8,
 	        teleportDelay = 6.5
 	    },
-	    main = {
+	    MAIN = {
 	        points = {
 	            Vector3.new(-144.95, 29.82, 400.64), -- Ring 1
 	            Vector3.new(-142.56, 29.82, 498.20)  -- Ring 4
@@ -23,98 +22,54 @@ return function()
 	    }
 	}
 	
-	-- Teleport-only
-	local function teleportOnly(pos)
-	    local char = player.Character or player.CharacterAdded:Wait()
-	    if not char then return end
-	    local hrp = char:FindFirstChild("HumanoidRootPart")
-	    if hrp then hrp.CFrame = CFrame.new(pos) end
-	end
-	
-	-- Kill-only with logging
-	local function killCharacter(deathDelay)
-	    print("Preparing to kill dummy...")
-	    task.wait(deathDelay)
-	
-	    local char = player.Character or player.CharacterAdded:Wait()
-	    if not char then
-	        warn("No character found for dummy")
-	        return
-	    end
-	
-	    local hum = char:FindFirstChild("Humanoid")
-	    if not hum then
-	        warn("No Humanoid found for dummy")
-	        return
-	    end
-	
-	    print("Killing dummy now")
-	    hum.Health = 0
-	    char:BreakJoints()
-	
-	    repeat task.wait() until player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-	end
-	
-	-- Teleport + kill
+	-- Teleport and kill
 	local function teleportAndDie(pos, deathDelay)
 	    local char = player.Character or player.CharacterAdded:Wait()
 	    if not char then return end
+	
 	    local hrp = char:FindFirstChild("HumanoidRootPart")
 	    local hum = char:FindFirstChild("Humanoid")
+	
 	    if not hrp or not hum then return end
+	
 	    hrp.CFrame = CFrame.new(pos)
 	    task.wait(deathDelay)
+	
 	    hum.Health = 0
 	    char:BreakJoints()
+	
 	    repeat task.wait() until player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 	end
 	
-	-- Dummy loop
-	local function runDummyLoop()
-	    local points = config.dummy.points
-	    local deathDelay = config.dummy.deathDelay
-	    local teleportDelay = config.dummy.teleportDelay
+	-- Loop logic based on role
+	local function runLoop(role)
+	    local config = playerConfigs[role]
+	    local getValue = game:GetService("ReplicatedStorage"):WaitForChild("Get_Value_From_Workspace")
 	
-	    while _G.SelectedPlayer == "DUMMY" do
-	        -- Ring 4
+	    while _G.SelectedPlayer == role do
+	        -- Phase A: Ring 4
 	        repeat
-	            teleportOnly(points[2])
-	            task.wait(teleportDelay)
-	        until _G.MainLoopActive
+	            if _G.SelectedPlayer ~= role then return end
+	            teleportAndDie(config.points[2], 0) -- teleport only
+	            task.wait(config.teleportDelay)
 	
-	        print("Main loop detected—dummy will die at Ring 4")
-	        teleportOnly(points[2])
-	        killCharacter(deathDelay)
-	        task.wait(teleportDelay)
+	            local ring4 = getValue:WaitForChild("Get_Time_Spar_Ring4"):InvokeServer()
+	        until ring4 and ring4 > 0
 	
-	        -- Ring 1
+	        teleportAndDie(config.points[2], config.deathDelay)
+	        task.wait(config.teleportDelay)
+	
+	        -- Phase B: Ring 1
 	        repeat
-	            teleportOnly(points[1])
-	            task.wait(teleportDelay)
-	        until _G.MainLoopActive
+	            if _G.SelectedPlayer ~= role then return end
+	            teleportAndDie(config.points[1], 0)
+	            task.wait(config.teleportDelay)
 	
-	        print("Main loop detected—dummy will die at Ring 1")
-	        teleportOnly(points[1])
-	        killCharacter(deathDelay)
-	        task.wait(teleportDelay)
-	    end
-	end
+	            local ring1 = getValue:WaitForChild("Get_Time_Spar_Ring1"):InvokeServer()
+	        until ring1 and ring1 > 0
 	
-	-- Main loop
-	local function runMainLoop()
-	    local points = config.main.points
-	    local deathDelay = config.main.deathDelay
-	    local teleportDelay = config.main.teleportDelay
-	
-	    while _G.SelectedPlayer == "MAIN" do
-	        _G.MainLoopActive = true
-	        teleportAndDie(points[2], deathDelay)
-	        task.wait(teleportDelay)
-	
-	        teleportAndDie(points[1], deathDelay)
-	        task.wait(teleportDelay)
-	
-	        _G.MainLoopActive = false
+	        teleportAndDie(config.points[1], config.deathDelay)
+	        task.wait(config.teleportDelay)
 	    end
 	end
 	
@@ -150,15 +105,15 @@ return function()
 	        _G.SelectedPlayer = nil
 	        button1.Text = "PLAYER 1: DUMMY"
 	        button1.BackgroundColor3 = Color3.fromRGB(100, 170, 255)
-	        print("Dummy stopped")
+	        print("PLAYER 1 stopped")
 	    else
 	        _G.SelectedPlayer = "DUMMY"
 	        button1.Text = "PLAYER 1: RUNNING"
 	        button1.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
 	        button2.Text = "PLAYER 2: MAIN"
 	        button2.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
-	        print("Dummy started")
-	        coroutine.wrap(runDummyLoop)()
+	        print("PLAYER 1 started")
+	        coroutine.wrap(function() runLoop("DUMMY") end)()
 	    end
 	end)
 	
@@ -167,15 +122,15 @@ return function()
 	        _G.SelectedPlayer = nil
 	        button2.Text = "PLAYER 2: MAIN"
 	        button2.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
-	        print("Main stopped")
+	        print("PLAYER 2 stopped")
 	    else
 	        _G.SelectedPlayer = "MAIN"
 	        button2.Text = "PLAYER 2: RUNNING"
 	        button2.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
 	        button1.Text = "PLAYER 1: DUMMY"
 	        button1.BackgroundColor3 = Color3.fromRGB(100, 170, 255)
-	        print("Main started")
-	        coroutine.wrap(runMainLoop)()
+	        print("PLAYER 2 started")
+	        coroutine.wrap(function() runLoop("MAIN") end)()
 	    end
 	end)
 end
