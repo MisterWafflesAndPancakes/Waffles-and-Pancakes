@@ -102,10 +102,8 @@ return function()
 	        task.wait(config.teleportDelay)
 	    end
 	end
-
-	--GUI Setup
-	local player = game.Players.LocalPlayer
 	
+	-- GUI Setup (your original version)
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.Name = "PlayerToggleGui"
 	screenGui.ResetOnSpawn = false
