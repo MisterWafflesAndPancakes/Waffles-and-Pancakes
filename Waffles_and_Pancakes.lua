@@ -9,7 +9,7 @@ return function()
 	            Vector3.new(-139.10, 29.82, 408.20), -- Ring 1
 	            Vector3.new(-137.85, 29.82, 487.46)  -- Ring 4
 	        },
-	        deathDelay = 1.2, -- slower death for dummy
+	        deathDelay = 1.2,
 	        teleportDelay = 6.5
 	    },
 	    [2] = {
@@ -17,12 +17,23 @@ return function()
 	            Vector3.new(-144.95, 29.82, 400.64), -- Ring 1
 	            Vector3.new(-142.56, 29.82, 498.20)  -- Ring 4
 	        },
-	        deathDelay = 0.4, -- faster death for main
+	        deathDelay = 0.4,
 	        teleportDelay = 5.4
 	    }
 	}
 	
-	-- Teleport and kill
+	-- Exclusive teleport-only for Player 1 (dummy)
+	local function teleportOnlyDummy(pos)
+	    local char = player.Character or player.CharacterAdded:Wait()
+	    if not char then return end
+	
+	    local hrp = char:FindFirstChild("HumanoidRootPart")
+	    if hrp then
+	        hrp.CFrame = CFrame.new(pos)
+	    end
+	end
+	
+	-- Standard teleport + kill
 	local function teleportAndDie(pos, deathDelay)
 	    local char = player.Character or player.CharacterAdded:Wait()
 	    if not char then return end
@@ -41,7 +52,7 @@ return function()
 	    repeat task.wait() until player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 	end
 	
-	-- Loop logic: Ring 4 → wait for spar → kill → Ring 1 → wait for spar → kill → repeat
+	-- Loop logic
 	local function runLoop(playerId)
 	    local config = playerConfigs[playerId]
 	    local rs = game:GetService("ReplicatedStorage")
@@ -52,7 +63,13 @@ return function()
 	        -- Phase A: Ring 4
 	        repeat
 	            if _G.SelectedPlayer ~= playerId then return end
-	            teleportAndDie(config.points[2], 0) -- teleport only
+	
+	            if playerId == 1 then
+	                teleportOnlyDummy(config.points[2])
+	            else
+	                teleportAndDie(config.points[2], 0)
+	            end
+	
 	            task.wait(config.teleportDelay)
 	
 	            local ring4
@@ -70,7 +87,13 @@ return function()
 	        -- Phase B: Ring 1
 	        repeat
 	            if _G.SelectedPlayer ~= playerId then return end
-	            teleportAndDie(config.points[1], 0) -- teleport only
+	
+	            if playerId == 1 then
+	                teleportOnlyDummy(config.points[1])
+	            else
+	                teleportAndDie(config.points[1], 0)
+	            end
+	
 	            task.wait(config.teleportDelay)
 	
 	            local ring1
