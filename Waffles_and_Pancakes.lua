@@ -2,7 +2,7 @@ return function()
 	local player = game.Players.LocalPlayer
 	_G.SelectedPlayer = nil
 	
-	-- 🧠 Player configs
+	-- Player configs
 	local playerConfigs = {
 	    [1] = {
 	        points = {
@@ -22,26 +22,30 @@ return function()
 	    }
 	}
 	
-	-- ⚔️ Teleport and kill
+	-- Teleport and kill
 	local function teleportAndDie(pos, deathDelay)
+	    print("Teleporting to:", pos)
+	
 	    local char = player.Character or player.CharacterAdded:Wait()
+	    if not char then print("No character found") return end
+	
 	    local hrp = char:FindFirstChild("HumanoidRootPart")
 	    local hum = char:FindFirstChild("Humanoid")
 	
-	    if not hrp or not hum then return end
+	    if not hrp then print("No HumanoidRootPart") return end
+	    if not hum then print("No Humanoid") return end
 	
 	    hrp.CFrame = CFrame.new(pos)
 	    task.wait(deathDelay)
 	
-	    if hum then
-	        hum.Health = 0
-	        char:BreakJoints()
-	    end
+	    print("Killing character...")
+	    hum.Health = 0
+	    char:BreakJoints()
 	
 	    repeat task.wait() until player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 	end
 	
-	-- 🧠 Wait until sparring starts on Ring 1 or Ring 4
+	-- Wait until sparring starts on Ring 1 or Ring 4
 	local function waitForSparStart()
 	    local rs = game:GetService("ReplicatedStorage")
 	    local getValue = rs:FindFirstChild("Get_Value_From_Workspace")
@@ -50,23 +54,27 @@ return function()
 	    repeat
 	        if _G.SelectedPlayer == nil then return end
 	
-	        local ring1, ring4 = 0, 0
+	        local ring1, ring4
 	
 	        local success1, result1 = pcall(function()
 	            return getValue:WaitForChild("Get_Time_Spar_Ring1"):InvokeServer()
 	        end)
+	        if success1 then ring1 = result1 end
+	
 	        local success4, result4 = pcall(function()
 	            return getValue:WaitForChild("Get_Time_Spar_Ring4"):InvokeServer()
 	        end)
+	        if success4 then ring4 = result4 end
 	
-	        ring1 = success1 and result1 or 0
-	        ring4 = success4 and result4 or 0
+	        if ring1 and ring1 > 0 or ring4 and ring4 > 0 then
+	            break
+	        end
 	
 	        task.wait(1)
-	    until ring1 > 0 or ring4 > 0
+	    until false
 	end
 	
-	-- 🔁 Loop logic
+	-- Loop logic
 	local function runLoop(playerId)
 	    local config = playerConfigs[playerId]
 	    while _G.SelectedPlayer == playerId do
@@ -80,7 +88,7 @@ return function()
 	    end
 	end
 	
-	-- 🖱️ GUI Setup
+	-- GUI Setup
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.Name = "PlayerToggleGui"
 	screenGui.ResetOnSpawn = false
@@ -106,7 +114,7 @@ return function()
 	button2.TextSize = 20
 	button2.Parent = screenGui
 	
-	-- 🎮 Button logic
+	-- Button logic
 	button1.MouseButton1Click:Connect(function()
 	    if _G.SelectedPlayer == 1 then
 	        _G.SelectedPlayer = nil
