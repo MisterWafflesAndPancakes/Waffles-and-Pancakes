@@ -1,74 +1,104 @@
 return function()
 	local player = game.Players.LocalPlayer
 	_G.SelectedPlayer = nil
+	_G.Ring1_P1 = false
+	_G.Ring1_P2 = false
+	_G.Ring4_P1 = false
+	_G.Ring4_P2 = false
 	
-	-- Player configs
+	-- Trigger setup
+	workspace.Spar_Ring1.Player1_Button.Touch.Touched:Connect(function(hit)
+	    if hit and hit.Parent == player.Character then
+	        _G.Ring1_P1 = true
+	    end
+	end)
+	
+	workspace.Spar_Ring1.Player2_Button.Touch.Touched:Connect(function(hit)
+	    if hit and hit.Parent == player.Character then
+	        _G.Ring1_P2 = true
+	    end
+	end)
+	
+	workspace.Spar_Ring4.Player1_Button.Touch.Touched:Connect(function(hit)
+	    if hit and hit.Parent == player.Character then
+	        _G.Ring4_P1 = true
+	    end
+	end)
+	
+	workspace.Spar_Ring4.Player2_Button.Touch.Touched:Connect(function(hit)
+	    if hit and hit.Parent == player.Character then
+	        _G.Ring4_P2 = true
+	    end
+	end)
+	
+	-- Teleport-only
+	local function teleportOnly(pos)
+	    local char = player.Character or player.CharacterAdded:Wait()
+	    if not char then return end
+	    local hrp = char:FindFirstChild("HumanoidRootPart")
+	    if hrp then hrp.CFrame = CFrame.new(pos) end
+	end
+	
+	-- Teleport and kill
+	local function teleportAndDie(pos, deathDelay)
+	    local char = player.Character or player.CharacterAdded:Wait()
+	    if not char then return end
+	    local hrp = char:FindFirstChild("HumanoidRootPart")
+	    local hum = char:FindFirstChild("Humanoid")
+	    if not hrp or not hum then return end
+	    hrp.CFrame = CFrame.new(pos)
+	    task.wait(deathDelay)
+	    hum.Health = 0
+	    char:BreakJoints()
+	    repeat task.wait() until player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+	end
+	
+	-- Loop logic
 	local playerConfigs = {
 	    DUMMY = {
 	        points = {
-	            Vector3.new(-139.10, 29.82, 408.20), -- Ring 1
-	            Vector3.new(-137.85, 29.82, 487.46)  -- Ring 4
+	            Vector3.new(-139.10, 29.82, 408.20),
+	            Vector3.new(-137.85, 29.82, 487.46)
 	        },
 	        deathDelay = 0.8,
 	        teleportDelay = 6.5
 	    },
 	    MAIN = {
 	        points = {
-	            Vector3.new(-144.95, 29.82, 400.64), -- Ring 1
-	            Vector3.new(-142.56, 29.82, 498.20)  -- Ring 4
+	            Vector3.new(-144.95, 29.82, 400.64),
+	            Vector3.new(-142.56, 29.82, 498.20)
 	        },
 	        deathDelay = 0.4,
 	        teleportDelay = 5.4
 	    }
 	}
 	
-	-- Teleport and kill
-	local function teleportAndDie(pos, deathDelay)
-	    local char = player.Character or player.CharacterAdded:Wait()
-	    if not char then return end
-	
-	    local hrp = char:FindFirstChild("HumanoidRootPart")
-	    local hum = char:FindFirstChild("Humanoid")
-	
-	    if not hrp or not hum then return end
-	
-	    hrp.CFrame = CFrame.new(pos)
-	    task.wait(deathDelay)
-	
-	    hum.Health = 0
-	    char:BreakJoints()
-	
-	    repeat task.wait() until player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-	end
-	
-	-- Loop logic based on role
 	local function runLoop(role)
 	    local config = playerConfigs[role]
-	    local getValue = game:GetService("ReplicatedStorage"):WaitForChild("Get_Value_From_Workspace")
 	
 	    while _G.SelectedPlayer == role do
 	        -- Ring 4
 	        repeat
 	            if _G.SelectedPlayer ~= role then return end
-	            teleportAndDie(config.points[2], 0)
+	            teleportOnly(config.points[2])
 	            task.wait(config.teleportDelay)
-	
-	            local ring4 = getValue:WaitForChild("Get_Time_Spar_Ring4"):InvokeServer()
-	        until typeof(ring4) == "number" and ring4 > 0
+	        until _G.Ring4_P1 and _G.Ring4_P2
 	
 	        teleportAndDie(config.points[2], config.deathDelay)
+	        _G.Ring4_P1 = false
+	        _G.Ring4_P2 = false
 	        task.wait(config.teleportDelay)
 	
 	        -- Ring 1
 	        repeat
 	            if _G.SelectedPlayer ~= role then return end
-	            teleportAndDie(config.points[1], 0)
+	            teleportOnly(config.points[1])
 	            task.wait(config.teleportDelay)
-	
-	            local ring1 = getValue:WaitForChild("Get_Time_Spar_Ring1"):InvokeServer()
-	        until typeof(ring1) == "number" and ring1 > 0
+	        until _G.Ring1_P1 and _G.Ring1_P2
 	
 	        teleportAndDie(config.points[1], config.deathDelay)
+	        _G.Ring1_P1 = false
+	        _G.Ring1_P2 = false
 	        task.wait(config.teleportDelay)
 	    end
 	end
