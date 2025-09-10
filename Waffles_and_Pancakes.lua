@@ -47,26 +47,26 @@ return function()
 	    local getValue = game:GetService("ReplicatedStorage"):WaitForChild("Get_Value_From_Workspace")
 	
 	    while _G.SelectedPlayer == role do
-	        -- Phase A: Ring 4
+	        -- Ring 4
 	        repeat
 	            if _G.SelectedPlayer ~= role then return end
-	            teleportAndDie(config.points[2], 0) -- teleport only
+	            teleportAndDie(config.points[2], 0)
 	            task.wait(config.teleportDelay)
 	
 	            local ring4 = getValue:WaitForChild("Get_Time_Spar_Ring4"):InvokeServer()
-	        until ring4 and ring4 > 0
+	        until typeof(ring4) == "number" and ring4 > 0
 	
 	        teleportAndDie(config.points[2], config.deathDelay)
 	        task.wait(config.teleportDelay)
 	
-	        -- Phase B: Ring 1
+	        -- Ring 1
 	        repeat
 	            if _G.SelectedPlayer ~= role then return end
 	            teleportAndDie(config.points[1], 0)
 	            task.wait(config.teleportDelay)
 	
 	            local ring1 = getValue:WaitForChild("Get_Time_Spar_Ring1"):InvokeServer()
-	        until ring1 and ring1 > 0
+	        until typeof(ring1) == "number" and ring1 > 0
 	
 	        teleportAndDie(config.points[1], config.deathDelay)
 	        task.wait(config.teleportDelay)
