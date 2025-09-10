@@ -52,6 +52,22 @@ return function()
 	    repeat task.wait() until player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 	end
 	
+	-- Kill-only for Player 1 after spar starts
+	local function killCharacter(deathDelay)
+	    task.wait(deathDelay)
+	
+	    local char = player.Character or player.CharacterAdded:Wait()
+	    if not char then return end
+	
+	    local hum = char:FindFirstChild("Humanoid")
+	    if hum then
+	        hum.Health = 0
+	        char:BreakJoints()
+	    end
+	
+	    repeat task.wait() until player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+	end
+	
 	-- Loop logic
 	local function runLoop(playerId)
 	    local config = playerConfigs[playerId]
@@ -80,7 +96,12 @@ return function()
 	        until ring4 and ring4 > 0
 	
 	        if _G.SelectedPlayer == playerId then
-	            teleportAndDie(config.points[2], config.deathDelay)
+	            if playerId == 1 then
+	                teleportOnlyDummy(config.points[2])
+	                killCharacter(config.deathDelay)
+	            else
+	                teleportAndDie(config.points[2], config.deathDelay)
+	            end
 	            task.wait(config.teleportDelay)
 	        end
 	
@@ -104,7 +125,12 @@ return function()
 	        until ring1 and ring1 > 0
 	
 	        if _G.SelectedPlayer == playerId then
-	            teleportAndDie(config.points[1], config.deathDelay)
+	            if playerId == 1 then
+	                teleportOnlyDummy(config.points[1])
+	                killCharacter(config.deathDelay)
+	            else
+	                teleportAndDie(config.points[1], config.deathDelay)
+	            end
 	            task.wait(config.teleportDelay)
 	        end
 	    end
