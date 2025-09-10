@@ -9,7 +9,7 @@ return function()
 	            Vector3.new(-139.10, 29.82, 408.20), -- Ring 1
 	            Vector3.new(-137.85, 29.82, 487.46)  -- Ring 4
 	        },
-	        deathDelay = 0.8,
+	        deathDelay = 1.2, -- slower death for dummy
 	        teleportDelay = 6.5
 	    },
 	    [2] = {
@@ -17,7 +17,7 @@ return function()
 	            Vector3.new(-144.95, 29.82, 400.64), -- Ring 1
 	            Vector3.new(-142.56, 29.82, 498.20)  -- Ring 4
 	        },
-	        deathDelay = 0.4,
+	        deathDelay = 0.4, -- faster death for main
 	        teleportDelay = 5.4
 	    }
 	}
@@ -62,8 +62,10 @@ return function()
 	            if success4 then ring4 = result4 end
 	        until ring4 and ring4 > 0
 	
-	        teleportAndDie(config.points[2], config.deathDelay)
-	        task.wait(config.teleportDelay)
+	        if _G.SelectedPlayer == playerId then
+	            teleportAndDie(config.points[2], config.deathDelay)
+	            task.wait(config.teleportDelay)
+	        end
 	
 	        -- Phase B: Ring 1
 	        repeat
@@ -78,8 +80,10 @@ return function()
 	            if success1 then ring1 = result1 end
 	        until ring1 and ring1 > 0
 	
-	        teleportAndDie(config.points[1], config.deathDelay)
-	        task.wait(config.teleportDelay)
+	        if _G.SelectedPlayer == playerId then
+	            teleportAndDie(config.points[1], config.deathDelay)
+	            task.wait(config.teleportDelay)
+	        end
 	    end
 	end
 	
