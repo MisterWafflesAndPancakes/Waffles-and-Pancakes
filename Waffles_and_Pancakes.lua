@@ -45,14 +45,16 @@ return function()
 	    repeat task.wait() until player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 	end
 	
-	-- Wait until sparring starts on Ring 1 or Ring 4
+	-- Wait until sparring starts on Ring 1 or Ring 4 (with timeout)
 	local function waitForSparStart()
 	    local rs = game:GetService("ReplicatedStorage")
 	    local getValue = rs:FindFirstChild("Get_Value_From_Workspace")
-	    if not getValue then return end
+	    if not getValue then print("Missing Get_Value_From_Workspace") return end
+	
+	    local startTime = tick()
 	
 	    repeat
-	        if _G.SelectedPlayer == nil then return end
+	        if _G.SelectedPlayer == nil then print("Loop cancelled") return end
 	
 	        local ring1, ring4
 	
@@ -66,8 +68,16 @@ return function()
 	        end)
 	        if success4 then ring4 = result4 end
 	
+	        print("Spar check → Ring1:", ring1, "Ring4:", ring4)
+	
 	        if ring1 and ring1 > 0 or ring4 and ring4 > 0 then
+	            print("Spar started!")
 	            break
+	        end
+	
+	        if tick() - startTime > 30 then
+	            print("Timeout: Spar did not start")
+	            return
 	        end
 	
 	        task.wait(1)
