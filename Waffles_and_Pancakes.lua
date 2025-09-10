@@ -6,16 +6,16 @@ return function()
 	local playerConfigs = {
 	    [1] = {
 	        points = {
-	            Vector3.new(-139.10, 29.82, 408.20),
-	            Vector3.new(-137.85, 29.82, 487.46)
+	            Vector3.new(-139.10, 29.82, 408.20), -- Ring 1
+	            Vector3.new(-137.85, 29.82, 487.46)  -- Ring 4
 	        },
 	        deathDelay = 0.8,
 	        teleportDelay = 6.5
 	    },
 	    [2] = {
 	        points = {
-	            Vector3.new(-144.95, 29.82, 400.64),
-	            Vector3.new(-142.56, 29.82, 498.20)
+	            Vector3.new(-144.95, 29.82, 400.64), -- Ring 1
+	            Vector3.new(-142.56, 29.82, 498.20)  -- Ring 4
 	        },
 	        deathDelay = 0.4,
 	        teleportDelay = 5.4
@@ -24,77 +24,62 @@ return function()
 	
 	-- Teleport and kill
 	local function teleportAndDie(pos, deathDelay)
-	    print("Teleporting to:", pos)
-	
 	    local char = player.Character or player.CharacterAdded:Wait()
-	    if not char then print("No character found") return end
+	    if not char then return end
 	
 	    local hrp = char:FindFirstChild("HumanoidRootPart")
 	    local hum = char:FindFirstChild("Humanoid")
 	
-	    if not hrp then print("No HumanoidRootPart") return end
-	    if not hum then print("No Humanoid") return end
+	    if not hrp or not hum then return end
 	
 	    hrp.CFrame = CFrame.new(pos)
 	    task.wait(deathDelay)
 	
-	    print("Killing character...")
 	    hum.Health = 0
 	    char:BreakJoints()
 	
 	    repeat task.wait() until player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 	end
 	
-	-- Wait until sparring starts on Ring 1 or Ring 4 (with timeout)
-	local function waitForSparStart()
-	    local rs = game:GetService("ReplicatedStorage")
-	    local getValue = rs:FindFirstChild("Get_Value_From_Workspace")
-	    if not getValue then print("Missing Get_Value_From_Workspace") return end
-	
-	    local startTime = tick()
-	
-	    repeat
-	        if _G.SelectedPlayer == nil then print("Loop cancelled") return end
-	
-	        local ring1, ring4
-	
-	        local success1, result1 = pcall(function()
-	            return getValue:WaitForChild("Get_Time_Spar_Ring1"):InvokeServer()
-	        end)
-	        if success1 then ring1 = result1 end
-	
-	        local success4, result4 = pcall(function()
-	            return getValue:WaitForChild("Get_Time_Spar_Ring4"):InvokeServer()
-	        end)
-	        if success4 then ring4 = result4 end
-	
-	        print("Spar check → Ring1:", ring1, "Ring4:", ring4)
-	
-	        if ring1 and ring1 > 0 or ring4 and ring4 > 0 then
-	            print("Spar started!")
-	            break
-	        end
-	
-	        if tick() - startTime > 30 then
-	            print("Timeout: Spar did not start")
-	            return
-	        end
-	
-	        task.wait(1)
-	    until false
-	end
-	
-	-- Loop logic
+	-- Loop logic: Ring 4 → wait for spar → kill → Ring 1 → wait for spar → kill → repeat
 	local function runLoop(playerId)
 	    local config = playerConfigs[playerId]
-	    while _G.SelectedPlayer == playerId do
-	        waitForSparStart()
+	    local rs = game:GetService("ReplicatedStorage")
+	    local getValue = rs:FindFirstChild("Get_Value_From_Workspace")
+	    if not getValue then return end
 	
-	        for _, pos in ipairs(config.points) do
-	            teleportAndDie(pos, config.deathDelay)
+	    while _G.SelectedPlayer == playerId do
+	        -- Phase A: Ring 4
+	        repeat
+	            if _G.SelectedPlayer ~= playerId then return end
+	            teleportAndDie(config.points[2], 0) -- teleport only
 	            task.wait(config.teleportDelay)
-	            if _G.SelectedPlayer ~= playerId then break end
-	        end
+	
+	            local ring4
+	            local success4, result4 = pcall(function()
+	                return getValue:WaitForChild("Get_Time_Spar_Ring4"):InvokeServer()
+	            end)
+	            if success4 then ring4 = result4 end
+	        until ring4 and ring4 > 0
+	
+	        teleportAndDie(config.points[2], config.deathDelay)
+	        task.wait(config.teleportDelay)
+	
+	        -- Phase B: Ring 1
+	        repeat
+	            if _G.SelectedPlayer ~= playerId then return end
+	            teleportAndDie(config.points[1], 0) -- teleport only
+	            task.wait(config.teleportDelay)
+	
+	            local ring1
+	            local success1, result1 = pcall(function()
+	                return getValue:WaitForChild("Get_Time_Spar_Ring1"):InvokeServer()
+	            end)
+	            if success1 then ring1 = result1 end
+	        until ring1 and ring1 > 0
+	
+	        teleportAndDie(config.points[1], config.deathDelay)
+	        task.wait(config.teleportDelay)
 	    end
 	end
 	
