@@ -32,13 +32,13 @@ return function()
 	
 	    if role == 1 then
 	        points = {
-	            workspace.Spar_Ring1.Player1_Button.Position,
-	            workspace.Spar_Ring4.Player1_Button.Position
+	            game.Workspace["Spar_Ring1"]["Player1_Button"].CFrame.,
+	            game.Workspace["Spar_Ring4"]["Player1_Button"].CFrame.
 	        }
 	    elseif role == 2 then
 	        points = {
-	            workspace.Spar_Ring1.Player2_Button.Position,
-	            workspace.Spar_Ring4.Player2_Button.Position
+	            game.Workspace["Spar_Ring1"]["Player2_Button"].CFrame.,
+	            game.Workspace["Spar_Ring4"]["Player2_Button"].CFrame.
 	        }
 	    else
 	        return
