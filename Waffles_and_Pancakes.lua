@@ -31,16 +31,27 @@ return function()
 	    if hrp then hrp.CFrame = CFrame.new(pos) end
 	end
 	
-	-- Kill-only
+	-- Kill-only with logging
 	local function killCharacter(deathDelay)
+	    print("Preparing to kill dummy...")
 	    task.wait(deathDelay)
+	
 	    local char = player.Character or player.CharacterAdded:Wait()
-	    if not char then return end
-	    local hum = char:FindFirstChild("Humanoid")
-	    if hum then
-	        hum.Health = 0
-	        char:BreakJoints()
+	    if not char then
+	        warn("No character found for dummy")
+	        return
 	    end
+	
+	    local hum = char:FindFirstChild("Humanoid")
+	    if not hum then
+	        warn("No Humanoid found for dummy")
+	        return
+	    end
+	
+	    print("Killing dummy now")
+	    hum.Health = 0
+	    char:BreakJoints()
+	
 	    repeat task.wait() until player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 	end
 	
@@ -71,6 +82,7 @@ return function()
 	            task.wait(teleportDelay)
 	        until _G.MainLoopActive
 	
+	        print("Main loop detected—dummy will die at Ring 4")
 	        teleportOnly(points[2])
 	        killCharacter(deathDelay)
 	        task.wait(teleportDelay)
@@ -81,6 +93,7 @@ return function()
 	            task.wait(teleportDelay)
 	        until _G.MainLoopActive
 	
+	        print("Main loop detected—dummy will die at Ring 1")
 	        teleportOnly(points[1])
 	        killCharacter(deathDelay)
 	        task.wait(teleportDelay)
@@ -98,7 +111,6 @@ return function()
 	        teleportAndDie(points[2], deathDelay)
 	        task.wait(teleportDelay)
 	
-	        _G.MainLoopActive = true
 	        teleportAndDie(points[1], deathDelay)
 	        task.wait(teleportDelay)
 	
