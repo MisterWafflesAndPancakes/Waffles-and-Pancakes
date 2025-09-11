@@ -72,19 +72,23 @@ return function()
 	        elseif phase == "respawn" then
 	            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 	            if hrp then
+	                -- ✅ Drift-proof fix: start timing the full cycle here
 	                phase = "wait"
-	                phaseStart = now
+	                phaseStart = os.clock()
 	            end
 	
 	        elseif phase == "wait" and elapsed >= config.cycleDelay then
 	            phase = "teleport"
-	            phaseStart = now
+	            phaseStart = os.clock()
 	            index = index % #points + 1
 	        end
 	    end)
 	end
 	
 	-- GUI Setup
+	local RunService = game:GetService("RunService")
+	local UserInputService = game:GetService("UserInputService")
+	
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.Name = "RoleToggleGui"
 	screenGui.ResetOnSpawn = false
@@ -99,12 +103,46 @@ return function()
 	    button.TextColor3 = Color3.new(1, 1, 1)
 	    button.Font = Enum.Font.SourceSansBold
 	    button.TextSize = 20
+	    button.Active = true
+	    button.Selectable = true
 	    button.Parent = screenGui
 	    return button
 	end
 	
+	local function makeDraggable(gui)
+	    local dragging = false
+	    local dragStart, startPos
+	
+	    gui.InputBegan:Connect(function(input)
+	        if input.UserInputType == Enum.UserInputType.MouseButton1 or
+	           input.UserInputType == Enum.UserInputType.Touch then
+	            dragging = true
+	            dragStart = input.Position
+	            startPos = gui.Position
+	
+	            input.Changed:Connect(function()
+	                if input.UserInputState == Enum.UserInputState.End then
+	                    dragging = false
+	                end
+	            end)
+	        end
+	    end)
+	
+	    UserInputService.InputChanged:Connect(function(input)
+	        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or
+	                         input.UserInputType == Enum.UserInputType.Touch) then
+	            local delta = input.Position - dragStart
+	            gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+	                                     startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	        end
+	    end)
+	end
+	
 	local button1 = createButton("PLAYER 1: DUMMY", UDim2.new(0, 20, 0, 20))
 	local button2 = createButton("PLAYER 2: MAIN", UDim2.new(0, 20, 0, 70))
+	
+	makeDraggable(button1)
+	makeDraggable(button2)
 	
 	-- Button logic
 	local function toggleRole(role)
