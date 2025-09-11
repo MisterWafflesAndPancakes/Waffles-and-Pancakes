@@ -8,78 +8,77 @@ return function()
 	    [1] = {
 	        name = "PLAYER 1: DUMMY",
 	        teleportDelay = 0.4,
-	        deathDelay = 0.45,
-	        cycleDelay = 5.65
+	        deathDelay = 0.5,
+	        cycleDelay = 5.7
 	    },
 	    [2] = {
 	        name = "PLAYER 2: MAIN",
 	        teleportDelay = 0.4,
-	        deathDelay = 0.45,
-	        cycleDelay = 5.65
+	        deathDelay = 0.5,
+	        cycleDelay = 5.7
 	    }
 	}
 	
 	-- Core loop (Heartbeat-driven state machine)
-	local function runLoop(role)
-	    local points
+	local RunService = game:GetService("RunService")
 	
-	    if role == 1 then
-	        points = {
-	            game.Workspace["Spar_Ring1"]["Player1_Button"].CFrame,
-	            game.Workspace["Spar_Ring4"]["Player1_Button"].CFrame
-	        }
-	    elseif role == 2 then
-	        points = {
-	            game.Workspace["Spar_Ring1"]["Player2_Button"].CFrame,
-	            game.Workspace["Spar_Ring4"]["Player2_Button"].CFrame
-	        }
-	    else
-	        return
-	    end
+	local function runLoop(role)
+	    local points = role == 1 and {
+	        workspace.Spar_Ring1.Player1_Button.CFrame,
+	        workspace.Spar_Ring4.Player1_Button.CFrame
+	    } or role == 2 and {
+	        workspace.Spar_Ring1.Player2_Button.CFrame,
+	        workspace.Spar_Ring4.Player2_Button.CFrame
+	    }
+	
+	    if not points then return end
 	
 	    local config = configs[role]
 	    local index = 1
-	    local timer = 0
 	    local phase = "teleport"
-	    local connection
+	    local phaseStart = os.clock()
 	
-	    connection = RunService.Heartbeat:Connect(function(deltaTime)
+	    local connection
+	    connection = RunService.Heartbeat:Connect(function()
 	        if activeRole ~= role then
 	            connection:Disconnect()
 	            return
 	        end
 	
-	        timer += deltaTime
+	        local now = os.clock()
+	        local elapsed = now - phaseStart
 	
-	        if phase == "teleport" and timer >= config.teleportDelay then
-	            timer = 0
+	        if phase == "teleport" and elapsed >= config.teleportDelay then
 	            phase = "kill"
+	            phaseStart = now
 	
 	            local char = player.Character or player.CharacterAdded:Wait()
 	            local hrp = char:FindFirstChild("HumanoidRootPart")
 	            if hrp then
 	                hrp.CFrame = points[index]
 	            end
-	        elseif phase == "kill" and timer >= config.deathDelay then
-	            timer = 0
+	
+	        elseif phase == "kill" and elapsed >= config.deathDelay then
 	            phase = "respawn"
+	            phaseStart = now
 	
 	            local char = player.Character
-	            local hum = char and char:FindFirstChild("Humanoid")
-	            if hum then
-	                hum.Health = 0
-	                char:BreakJoints()
+	            if char then
+	                pcall(function()
+	                    char:BreakJoints()
+	                end)
 	            end
+	
 	        elseif phase == "respawn" then
-	            local char = player.Character
-	            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+	            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 	            if hrp then
-	                timer = 0
 	                phase = "wait"
+	                phaseStart = now
 	            end
-	        elseif phase == "wait" and timer >= config.cycleDelay then
-	            timer = 0
+	
+	        elseif phase == "wait" and elapsed >= config.cycleDelay then
 	            phase = "teleport"
+	            phaseStart = now
 	            index = index % #points + 1
 	        end
 	    end)
