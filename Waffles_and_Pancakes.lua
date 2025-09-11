@@ -9,13 +9,13 @@ return function()
 	        name = "PLAYER 1: DUMMY",
 	        teleportDelay = 0.4,
 	        deathDelay = 0.52,
-	        cycleDelay = 6
+	        cycleDelay = 5.78
 	    },
 	    [2] = {
 	        name = "PLAYER 2: MAIN",
 	        teleportDelay = 0.4,
 	        deathDelay = 0.52,
-	        cycleDelay = 6
+	        cycleDelay = 5.78
 	    }
 	}
 	
