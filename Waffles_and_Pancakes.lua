@@ -7,15 +7,15 @@ return function()
 	local configs = {
 	    [1] = {
 	        name = "PLAYER 1: DUMMY",
-	        teleportDelay = 0.3,
-	        deathDelay = 0.3,
-	        cycleDelay = 5.6
+	        teleportDelay = 0.4,
+	        deathDelay = 0.45,
+	        cycleDelay = 5.65
 	    },
 	    [2] = {
 	        name = "PLAYER 2: MAIN",
-	        teleportDelay = 0.3,
-	        deathDelay = 0.3,
-	        cycleDelay = 5.6
+	        teleportDelay = 0.4,
+	        deathDelay = 0.45,
+	        cycleDelay = 5.65
 	    }
 	}
 	
