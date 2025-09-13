@@ -4,7 +4,7 @@ return function()
 	local player = game.Players.LocalPlayer
 	local activeRole = nil
 
-	-- Configs
+	-- CONFIGS
 	local configs = {
 		[1] = {
 			name = "PLAYER 1: DUMMY",
@@ -18,7 +18,7 @@ return function()
 		}
 	}
 
-	-- Core loop (drift-proof)
+	--Spawn-Based loop
 	local function runLoop(role)
 		local points = role == 1 and {
 			workspace.Spar_Ring4.Player1_Button.CFrame,
@@ -29,24 +29,24 @@ return function()
 			workspace.Spar_Ring3.Player2_Button.CFrame,
 			workspace.Spar_Ring2.Player2_Button.CFrame
 		}
-
+	
 		if not points then return end
-
+	
 		local config = configs[role]
 		local index = 1
 		local phase = "kill"
 		local phaseStart = os.clock()
-
+	
 		local connection
 		connection = RunService.Heartbeat:Connect(function()
 			if activeRole ~= role then
 				connection:Disconnect()
 				return
 			end
-
+	
 			local now = os.clock()
 			local elapsed = now - phaseStart
-
+	
 			if phase == "kill" and elapsed >= config.deathDelay then
 				local char = player.Character
 				if char then
@@ -56,15 +56,17 @@ return function()
 				end
 				phase = "respawn"
 				phaseStart = now
-
+	
 			elseif phase == "respawn" then
-				local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+				player.CharacterAdded:Wait()
+				local char = player.Character
+				local hrp = char and char:FindFirstChild("HumanoidRootPart")
 				if hrp then
 					hrp.CFrame = points[index]
 					phase = "wait"
 					phaseStart = os.clock()
 				end
-
+	
 			elseif phase == "wait" and elapsed >= config.cycleDelay then
 				index = index % #points + 1
 				phase = "kill"
