@@ -65,7 +65,7 @@ return function()
 				phase = "waitingForPlacement"
 	
 				coroutine.wrap(function()
-					player.CharacterAppearanceLoaded:Wait()
+					player.CharacterAdded:Wait()
 					local newChar = player.Character
 					if not newChar then return end
 	
@@ -99,6 +99,7 @@ return function()
 			end
 		end)
 	end
+	
 	-- GUI Setup
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.Name = "RoleToggleGui"
