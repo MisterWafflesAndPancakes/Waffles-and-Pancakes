@@ -7,82 +7,82 @@ return function()
 	local configs = {
 	    [1] = {
 	        name = "PLAYER 1: DUMMY",
-	        teleportDelay = 0.3,
 	        deathDelay = 0.5,
 	        cycleDelay = 5.8
 	    },
 	    [2] = {
 	        name = "PLAYER 2: MAIN",
-	        teleportDelay = 0.3,
 	        deathDelay = 0.5,
 	        cycleDelay = 5.8
 	    }
 	}
 	
-	-- Core loop (clock.os() based, undriftable)
-	local RunService = game:GetService("RunService")
+		-- Core loop (clock.os() based, undriftable)
+		local function runLoop(role)
+		local points = role == 1 and {
+			workspace.Spar_Ring4.Player1_Button.CFrame,
+			workspace.Spar_Ring3.Player1_Button.CFrame,
+			workspace.Spar_Ring2.Player1_Button.CFrame
+		} or {
+			workspace.Spar_Ring4.Player2_Button.CFrame,
+			workspace.Spar_Ring3.Player2_Button.CFrame,
+			workspace.Spar_Ring2.Player2_Button.CFrame
+		}
 	
-	local function runLoop(role)
-	    local points = role == 1 and {
-	        workspace.Spar_Ring1.Player1_Button.CFrame,
-	        workspace.Spar_Ring4.Player1_Button.CFrame
-	    } or role == 2 and {
-	        workspace.Spar_Ring1.Player2_Button.CFrame,
-	        workspace.Spar_Ring4.Player2_Button.CFrame
-	    }
+		if not points then return end
 	
-	    if not points then return end
+		local config = configs[role]
+		local index = 1
+		local phase = "kill"
+		local phaseStart = os.clock()
 	
-	    local config = configs[role]
-	    local index = 1
-	    local phase = "teleport"
-	    local phaseStart = os.clock()
+		local connection
+		connection = RunService.Heartbeat:Connect(function()
+			if activeRole ~= role then
+				connection:Disconnect()
+				return
+			end
 	
-	    local connection
-	    connection = RunService.Heartbeat:Connect(function()
-	        if activeRole ~= role then
-	            connection:Disconnect()
-	            return
-	        end
+			local now = os.clock()
+			local elapsed = now - phaseStart
 	
-	        local now = os.clock()
-	        local elapsed = now - phaseStart
+			if phase == "kill" and elapsed >= config.deathDelay then
+				local char = player.Character
+				if char then
+					pcall(function()
+						char:BreakJoints()
+					end)
+				end
+				phase = "respawn"
+				phaseStart = now
 	
-	        if phase == "teleport" and elapsed >= config.teleportDelay then
-	            phase = "kill"
-	            phaseStart = now
+			elseif phase == "respawn" then
+				-- Use coroutine to wait for HRP without blocking Heartbeat
+				local placed = false
 	
-	            local char = player.Character or player.CharacterAdded:Wait()
-	            local hrp = char:FindFirstChild("HumanoidRootPart")
-	            if hrp then
-	                hrp.CFrame = points[index]
-	            end
+				coroutine.wrap(function()
+					player.CharacterAdded:Wait()
+					local char = player.Character
+					if not char then return end
 	
-	        elseif phase == "kill" and elapsed >= config.deathDelay then
-	            phase = "respawn"
-	            phaseStart = now
+					local hrp = char:WaitForChild("HumanoidRootPart", 2)
+					if hrp then
+						hrp.CFrame = points[index]
+						placed = true
+					end
+				end)()
 	
-	            local char = player.Character
-	            if char then
-	                pcall(function()
-	                    char:BreakJoints()
-	                end)
-	            end
+				if placed then
+					phase = "wait"
+					phaseStart = os.clock()
+				end
 	
-	        elseif phase == "respawn" then
-	            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-	            if hrp then
-	                -- Drift-proof fix (start timing the full cycle here)
-	                phase = "wait"
-	                phaseStart = os.clock()
-	            end
-	
-	        elseif phase == "wait" and elapsed >= config.cycleDelay then
-	            phase = "teleport"
-	            phaseStart = os.clock()
-	            index = index % #points + 1
-	        end
-	    end)
+			elseif phase == "wait" and elapsed >= config.cycleDelay then
+				index = index % #points + 1
+				phase = "kill"
+				phaseStart = os.clock()
+			end
+		end)
 	end
 	
 	-- GUI Setup (Universally draggable, highly responsive)
