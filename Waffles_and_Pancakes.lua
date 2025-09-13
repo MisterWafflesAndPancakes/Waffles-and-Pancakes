@@ -20,7 +20,7 @@ return function()
 		}
 	}
 
-	-- Loop function
+	--Core loop logic
 	local function runLoop(role)
 		local points = (role == 1) and {
 			workspace.Spar_Ring4.Player1_Button.CFrame,
@@ -31,29 +31,29 @@ return function()
 			workspace.Spar_Ring3.Player2_Button.CFrame,
 			workspace.Spar_Ring2.Player2_Button.CFrame
 		}
-
+	
 		if not points then return end
-
+	
 		local config = configs[role]
 		local index = 1
 		local phase = "kill"
 		local phaseStart = os.clock()
-
+	
 		phaseSignal.Event:Connect(function(newPhase)
 			phase = newPhase
 			phaseStart = os.clock()
 		end)
-
+	
 		local connection
 		connection = RunService.Heartbeat:Connect(function()
 			if activeRole ~= role then
 				connection:Disconnect()
 				return
 			end
-
+	
 			local now = os.clock()
 			local elapsed = now - phaseStart
-
+	
 			if phase == "kill" and elapsed >= config.deathDelay then
 				local char = player.Character
 				if char then
@@ -62,27 +62,35 @@ return function()
 					end)
 					print("Killed character for role:", role)
 				end
-
+	
 				phase = "waitingForPlacement"
 				phaseStart = os.clock()
-
+	
 				coroutine.wrap(function()
 					player.CharacterAdded:Wait()
 					local newChar = player.Character
 					if not newChar then return end
-
-					local hrp = newChar:WaitForChild("HumanoidRootPart", 5)
+	
+					local hrp
+					local timeout = os.clock() + 5
+					repeat
+						hrp = newChar:FindFirstChild("HumanoidRootPart")
+						RunService.Heartbeat:Wait()
+					until hrp or os.clock() > timeout
+	
 					if hrp then
 						hrp.Anchored = false
 						hrp.CFrame = points[index]
 						print("Teleported to ring index:", index)
-						phaseSignal:Fire("wait")
 					else
 						warn("HumanoidRootPart not found for placement")
 					end
+	
+					-- Always reset phase even if placement fails
+					phaseSignal:Fire("wait")
 				end)()
 			end
-
+	
 			if phase == "wait" and elapsed >= config.cycleDelay then
 				index = (index % #points) + 1
 				print("Advancing to next ring index:", index)
@@ -91,7 +99,6 @@ return function()
 			end
 		end)
 	end
-
 	-- GUI Setup
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.Name = "RoleToggleGui"
