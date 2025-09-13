@@ -10,13 +10,13 @@ return function()
 	local configs = {
 		[1] = {
 			name = "PLAYER 1: DUMMY",
-			deathDelay = 0.5,
-			cycleDelay = 5.8
+			deathDelay = 0.2,
+			cycleDelay = 0.8
 		},
 		[2] = {
 			name = "PLAYER 2: MAIN",
-			deathDelay = 0.5,
-			cycleDelay = 5.8
+			deathDelay = 0.2,
+			cycleDelay = 0.8
 		}
 	}
 
