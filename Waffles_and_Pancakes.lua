@@ -17,8 +17,8 @@ return function()
 	    }
 	}
 	
-		-- Core loop (clock.os() based, undriftable)
-			local function runLoop(role)
+	-- Core loop (clock.os() based, undriftable)
+	local function runLoop(role)
 		local points = (role == 1) and {
 			workspace.Spar_Ring4.Player1_Button.CFrame,
 			workspace.Spar_Ring3.Player1_Button.CFrame,
@@ -35,7 +35,6 @@ return function()
 		local index = 1
 		local phase = "kill"
 		local phaseStart = os.clock()
-		local placed = false
 	
 		local connection
 		connection = RunService.Heartbeat:Connect(function()
@@ -54,11 +53,10 @@ return function()
 						char:BreakJoints()
 					end)
 				end
-				phase = "respawn"
+				phase = "waitingForPlacement"
 				phaseStart = now
-				placed = false
 	
-				-- Start coroutine to handle placement
+				-- Coroutine handles placement and phase transition
 				coroutine.wrap(function()
 					player.CharacterAdded:Wait()
 					local char = player.Character
@@ -67,15 +65,13 @@ return function()
 					local hrp = char:WaitForChild("HumanoidRootPart", 2)
 					if hrp then
 						hrp.CFrame = points[index]
-						placed = true
+						phase = "wait"
+						phaseStart = os.clock()
 					end
 				end)()
 			end
 	
-			if phase == "respawn" and placed then
-				phase = "wait"
-				phaseStart = os.clock()
-			end
+			-- waitingForPlacement: do nothing until coroutine transitions to "wait"
 	
 			if phase == "wait" and elapsed >= config.cycleDelay then
 				index = index % #points + 1
