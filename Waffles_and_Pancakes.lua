@@ -20,7 +20,7 @@ return function()
 		}
 	}
 
-	--Core loop logic
+	-- Core loop logic
 	local function runLoop(role)
 		local points = (role == 1) and {
 			workspace.Spar_Ring4.Player1_Button.CFrame,
@@ -37,11 +37,11 @@ return function()
 		local config = configs[role]
 		local index = 1
 		local phase = "kill"
-		local phaseStart = os.clock()
+		local nextPhaseTime = os.clock() + config.deathDelay
 	
 		phaseSignal.Event:Connect(function(newPhase)
 			phase = newPhase
-			phaseStart = os.clock()
+			nextPhaseTime = os.clock() + config.cycleDelay
 		end)
 	
 		local connection
@@ -52,9 +52,8 @@ return function()
 			end
 	
 			local now = os.clock()
-			local elapsed = now - phaseStart
 	
-			if phase == "kill" and elapsed >= config.deathDelay then
+			if phase == "kill" and now >= nextPhaseTime then
 				local char = player.Character
 				if char then
 					pcall(function()
@@ -64,41 +63,45 @@ return function()
 				end
 	
 				phase = "waitingForPlacement"
-				phaseStart = os.clock()
 	
 				coroutine.wrap(function()
 					player.CharacterAdded:Wait()
 					local newChar = player.Character
 					if not newChar then return end
 	
-					local hrp
-					local timeout = os.clock() + 5
-					repeat
-						hrp = newChar:FindFirstChild("HumanoidRootPart")
-						RunService.Heartbeat:Wait()
-					until hrp or os.clock() > timeout
+					local hrp = newChar:FindFirstChild("HumanoidRootPart")
+					if not hrp then
+						for _ = 1, 10 do
+							RunService.Heartbeat:Wait()
+							hrp = newChar:FindFirstChild("HumanoidRootPart")
+							if hrp then break end
+						end
+					end
 	
 					if hrp then
-						hrp.Anchored = false
-						hrp.CFrame = points[index]
+						task.defer(function()
+							hrp.Anchored = false
+							hrp.CFrame = points[index]
+						end)
 						print("Teleported to ring index:", index)
 					else
 						warn("HumanoidRootPart not found for placement")
 					end
 	
-					-- Always reset phase even if placement fails
-					phaseSignal:Fire("wait")
+					phase = "wait"
+					nextPhaseTime = os.clock() + config.cycleDelay
 				end)()
 			end
 	
-			if phase == "wait" and elapsed >= config.cycleDelay then
+			if phase == "wait" and now >= nextPhaseTime then
 				index = (index % #points) + 1
 				print("Advancing to next ring index:", index)
 				phase = "kill"
-				phaseStart = os.clock()
+				nextPhaseTime = os.clock() + config.deathDelay
 			end
 		end)
 	end
+
 	-- GUI Setup
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.Name = "RoleToggleGui"
