@@ -18,8 +18,8 @@ return function()
 	}
 	
 		-- Core loop (clock.os() based, undriftable)
-		local function runLoop(role)
-		local points = role == 1 and {
+			local function runLoop(role)
+		local points = (role == 1) and {
 			workspace.Spar_Ring4.Player1_Button.CFrame,
 			workspace.Spar_Ring3.Player1_Button.CFrame,
 			workspace.Spar_Ring2.Player1_Button.CFrame
@@ -35,6 +35,7 @@ return function()
 		local index = 1
 		local phase = "kill"
 		local phaseStart = os.clock()
+		local placed = false
 	
 		local connection
 		connection = RunService.Heartbeat:Connect(function()
@@ -55,11 +56,9 @@ return function()
 				end
 				phase = "respawn"
 				phaseStart = now
+				placed = false
 	
-			elseif phase == "respawn" then
-				-- Use coroutine to wait for HRP without blocking Heartbeat
-				local placed = false
-	
+				-- Start coroutine to handle placement
 				coroutine.wrap(function()
 					player.CharacterAdded:Wait()
 					local char = player.Character
@@ -71,13 +70,14 @@ return function()
 						placed = true
 					end
 				end)()
+			end
 	
-				if placed then
-					phase = "wait"
-					phaseStart = os.clock()
-				end
+			if phase == "respawn" and placed then
+				phase = "wait"
+				phaseStart = os.clock()
+			end
 	
-			elseif phase == "wait" and elapsed >= config.cycleDelay then
+			if phase == "wait" and elapsed >= config.cycleDelay then
 				index = index % #points + 1
 				phase = "kill"
 				phaseStart = os.clock()
