@@ -16,7 +16,8 @@ return function()
 	        cycleDelay = 5.8
 	    }
 	}
-	
+
+	-- Loop function 
 	local function runLoop(role)
 		local points = (role == 1) and {
 			workspace.Spar_Ring4.Player1_Button.CFrame,
@@ -47,30 +48,28 @@ return function()
 	
 			if phase == "kill" and elapsed >= config.deathDelay then
 				local char = player.Character
-				local humanoid = char and char:FindFirstChildOfClass("Humanoid")
-	
-				if char and humanoid and humanoid.Health > 0 then
+				if char then
 					pcall(function()
 						char:BreakJoints()
 					end)
-	
-					phase = "waitingForPlacement"
-					phaseStart = now
-	
-					-- Coroutine handles placement and phase transition
-					coroutine.wrap(function()
-						player.CharacterAdded:Wait()
-						local newChar = player.Character
-						if not newChar then return end
-	
-						local hrp = newChar:WaitForChild("HumanoidRootPart", 2)
-						if hrp then
-							hrp.CFrame = points[index]
-							phase = "wait"
-							phaseStart = os.clock()
-						end
-					end)()
 				end
+	
+				phase = "waitingForPlacement"
+				phaseStart = now
+	
+				-- Coroutine handles placement and phase transition
+				coroutine.wrap(function()
+					player.CharacterAdded:Wait()
+					local newChar = player.Character
+					if not newChar then return end
+	
+					local hrp = newChar:WaitForChild("HumanoidRootPart", 2)
+					if hrp then
+						hrp.CFrame = points[index]
+						phase = "wait"
+						phaseStart = os.clock()
+					end
+				end)()
 			end
 	
 			-- waitingForPlacement: do nothing until coroutine transitions to "wait"
