@@ -58,33 +58,35 @@ return function()
 				phase = "waitingForPlacement"
 				phaseStart = now
 
-				coroutine.wrap(function()
-					local timeout = os.clock() + 5
-					local newChar
-
-					repeat
-						newChar = player.Character
-						RunService.Heartbeat:Wait()
-					until newChar and newChar:FindFirstChild("HumanoidRootPart") or os.clock() > timeout
-
-					if newChar then
-						local hrp = newChar:FindFirstChild("HumanoidRootPart")
-						if hrp then
-							hrp.CFrame = points[index]
-							phase = "wait"
-							phaseStart = os.clock()
-						end
-					end
-				end)()
-			end
-
-			if phase == "wait" and elapsed >= config.cycleDelay then
-				index = (index % #points) + 1
-				phase = "kill"
-				phaseStart = os.clock()
-			end
-		end)
-	end
+	coroutine.wrap(function()
+		player.CharacterAdded:Wait()
+		local newChar = player.Character
+		if not newChar then return end
+	
+		local hrp
+		local timeout = os.clock() + 5
+		repeat
+			hrp = newChar:FindFirstChild("HumanoidRootPart")
+			RunService.Heartbeat:Wait()
+		until hrp or os.clock() > timeout
+	
+		if hrp then
+			print("Placing at ring index:", index)
+			hrp.CFrame = points[index]
+			print("Teleported to:", tostring(points[index]))
+			phase = "wait"
+			phaseStart = os.clock()
+		else
+			warn("Failed to find HumanoidRootPart within timeout")
+		end
+	end)()
+				if phase == "wait" and elapsed >= config.cycleDelay then
+					index = (index % #points) + 1
+					phase = "kill"
+					phaseStart = os.clock()
+				end
+			end)
+		end
 
 	-- GUI Setup
 	local screenGui = Instance.new("ScreenGui")
