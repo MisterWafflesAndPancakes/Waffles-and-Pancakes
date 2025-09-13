@@ -46,16 +46,29 @@ return function()
 			local now = os.clock()
 			local elapsed = now - phaseStart
 	
-			if phase == "kill" and elapsed >= config.deathDelay then
-				local char = player.Character
-				if char then
-					pcall(function()
-						char:BreakJoints()
-					end)
+		if phase == "kill" and elapsed >= config.deathDelay then
+			local char = player.Character
+			if char then
+				pcall(function()
+					char:BreakJoints()
+				end)
+			end
+		
+			phase = "waitingForPlacement"
+			phaseStart = now
+		
+			coroutine.wrap(function()
+				player.CharacterAdded:Wait()
+				local newChar = player.Character
+				if not newChar then return end
+		
+				local hrp = newChar:WaitForChild("HumanoidRootPart", 2)
+				if hrp then
+					hrp.CFrame = points[index]
+					phaseSignal:Fire("wait")
 				end
-	
-				phase = "waitingForPlacement"
-				phaseStart = now
+			end)()
+		end
 	
 				-- Coroutine handles placement and phase transition
 				coroutine.wrap(function()
