@@ -3,23 +3,23 @@ return function()
 	local player = game.Players.LocalPlayer
 	local activeRole = nil
 	
-	-- Configs
+	-- Configs (Adjusted for possible fix to a no teleport death.)
 	local configs = {
 	    [1] = {
 	        name = "PLAYER 1: DUMMY",
-	        teleportDelay = 0.4,
+	        teleportDelay = 0.3,
 	        deathDelay = 0.5,
-	        cycleDelay = 5.7
+	        cycleDelay = 5.8
 	    },
 	    [2] = {
 	        name = "PLAYER 2: MAIN",
-	        teleportDelay = 0.4,
+	        teleportDelay = 0.3,
 	        deathDelay = 0.5,
-	        cycleDelay = 5.7
+	        cycleDelay = 5.8
 	    }
 	}
 	
-	-- Core loop (Heartbeat-driven state machine)
+	-- Core loop (clock.os() based, undriftable)
 	local RunService = game:GetService("RunService")
 	
 	local function runLoop(role)
@@ -72,7 +72,7 @@ return function()
 	        elseif phase == "respawn" then
 	            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 	            if hrp then
-	                -- ✅ Drift-proof fix: start timing the full cycle here
+	                -- Drift-proof fix (start timing the full cycle here)
 	                phase = "wait"
 	                phaseStart = os.clock()
 	            end
@@ -85,7 +85,7 @@ return function()
 	    end)
 	end
 	
-	-- GUI Setup
+	-- GUI Setup (Universally draggable, highly responsive)
 	local RunService = game:GetService("RunService")
 	local UserInputService = game:GetService("UserInputService")
 	
@@ -144,7 +144,7 @@ return function()
 	makeDraggable(button1)
 	makeDraggable(button2)
 	
-	-- Button logic
+	-- Button logic (Makes the button work!!!)
 	local function toggleRole(role)
 	    if activeRole == role then
 	        activeRole = nil
