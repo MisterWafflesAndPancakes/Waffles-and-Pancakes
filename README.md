@@ -1,2 +1,2 @@
 # Waffles-and-Pancakes
-grow a garden (NO NOOBS ALLOWED!!! >:C)
+if ur here and ur not supposed to be ill know 😡😡😡
