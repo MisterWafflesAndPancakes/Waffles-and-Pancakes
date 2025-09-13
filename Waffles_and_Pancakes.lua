@@ -4,8 +4,6 @@ return function()
 	local player = game.Players.LocalPlayer
 	local activeRole = nil
 
-	local phaseSignal = Instance.new("BindableEvent")
-
 	-- Configs
 	local configs = {
 		[1] = {
@@ -39,11 +37,6 @@ return function()
 		local phase = "kill"
 		local phaseStart = os.clock()
 
-		phaseSignal.Event:Connect(function(newPhase)
-			phase = newPhase
-			phaseStart = os.clock()
-		end)
-
 		local connection
 		connection = RunService.Heartbeat:Connect(function()
 			if activeRole ~= role then
@@ -66,20 +59,27 @@ return function()
 				phaseStart = now
 
 				coroutine.wrap(function()
-					player.CharacterAdded:Wait()
-					local newChar = player.Character
-					if not newChar then return end
+					local timeout = os.clock() + 5
+					local newChar
 
-					local hrp = newChar:WaitForChild("HumanoidRootPart", 2)
-					if hrp then
-						hrp.CFrame = points[index]
-						phaseSignal:Fire("wait")
+					repeat
+						newChar = player.Character
+						RunService.Heartbeat:Wait()
+					until newChar and newChar:FindFirstChild("HumanoidRootPart") or os.clock() > timeout
+
+					if newChar then
+						local hrp = newChar:FindFirstChild("HumanoidRootPart")
+						if hrp then
+							hrp.CFrame = points[index]
+							phase = "wait"
+							phaseStart = os.clock()
+						end
 					end
 				end)()
 			end
 
 			if phase == "wait" and elapsed >= config.cycleDelay then
-				index = index % #points + 1
+				index = (index % #points) + 1
 				phase = "kill"
 				phaseStart = os.clock()
 			end
