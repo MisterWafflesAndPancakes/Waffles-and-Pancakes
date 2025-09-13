@@ -79,13 +79,13 @@ return function()
 					end
 	
 					if hrp then
+						newChar.PrimaryPart = hrp
 						task.defer(function()
-							hrp.Anchored = false
-							hrp.CFrame = points[index]
+							newChar:SetPrimaryPartCFrame(points[index])
 						end)
-						print("Teleported to ring index:", index)
+						print("Placed at ring index:", index)
 					else
-						warn("HumanoidRootPart not found for placement")
+						warn("HumanoidRootPart not found—spawned at default")
 					end
 	
 					phase = "wait"
@@ -101,7 +101,6 @@ return function()
 			end
 		end)
 	end
-
 	-- GUI Setup
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.Name = "RoleToggleGui"
