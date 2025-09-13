@@ -65,7 +65,7 @@ return function()
 				phase = "waitingForPlacement"
 	
 				coroutine.wrap(function()
-					player.CharacterAdded:Wait()
+					player.CharacterAppearanceLoaded:Wait()
 					local newChar = player.Character
 					if not newChar then return end
 	
@@ -80,9 +80,7 @@ return function()
 	
 					if hrp then
 						newChar.PrimaryPart = hrp
-						task.defer(function()
-							newChar:SetPrimaryPartCFrame(points[index])
-						end)
+						newChar:SetPrimaryPartCFrame(points[index])
 						print("Placed at ring index:", index)
 					else
 						warn("HumanoidRootPart not found—spawned at default")
